@@ -10,7 +10,7 @@ import (
 
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
-const STATIC_IMG_DIR = STATIC_DIR + "/img"
+const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
 
 type ServerConfig struct {
 	Port int
@@ -31,8 +31,6 @@ func getServerPort() (int, error) {
 	return port, nil
 }
 
-var handleHome = http.FileServer(http.Dir(STATIC_DIR))
-var handleChirpyLogo = http.StripPrefix("/assets/", http.FileServer(http.Dir(STATIC_IMG_DIR)))
 func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
@@ -40,6 +38,8 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
+var handleHome = http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR)))
+var handleAssets = http.StripPrefix("/app/assets/", http.FileServer(http.Dir(STATIC_ASSETS_DIR)))
 
 func main() {
 	port, err := getServerPort()
@@ -54,9 +54,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/assets/", handleChirpyLogo)
-	mux.Handle("/", handleHome)
 	mux.HandleFunc("/healthz/", handleHealthCheck)
+	mux.Handle("/app/assets/", handleAssets)
+	mux.Handle("/app", handleHome)
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
