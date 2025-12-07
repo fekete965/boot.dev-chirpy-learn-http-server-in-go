@@ -9,6 +9,7 @@ import (
 )
 
 const DEFAULT_PORT = 8080
+const STATIC_DIR = "./static"
 
 type ServerConfig struct {
 	Port int
@@ -29,9 +30,7 @@ func getServerPort() (int, error) {
 	return port, nil
 }
 
-func handleHome(w http.ResponseWriter, r *http.Request) {
-	http.NotFound(w, r)
-}
+var handleHome = http.FileServer(http.Dir(STATIC_DIR))
 
 func main() {
 	port, err := getServerPort()
@@ -45,7 +44,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleHome)
+	mux.Handle("/", handleHome)
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
