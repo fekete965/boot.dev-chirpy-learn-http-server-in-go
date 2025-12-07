@@ -10,6 +10,7 @@ import (
 
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
+const STATIC_IMG_DIR = STATIC_DIR + "/img"
 
 type ServerConfig struct {
 	Port int
@@ -31,6 +32,7 @@ func getServerPort() (int, error) {
 }
 
 var handleHome = http.FileServer(http.Dir(STATIC_DIR))
+var handleChirpyLogo = http.StripPrefix("/assets/", http.FileServer(http.Dir(STATIC_IMG_DIR)))
 
 func main() {
 	port, err := getServerPort()
@@ -44,6 +46,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	mux.Handle("/assets/", handleChirpyLogo)
 	mux.Handle("/", handleHome)
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
