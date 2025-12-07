@@ -33,6 +33,13 @@ func getServerPort() (int, error) {
 
 var handleHome = http.FileServer(http.Dir(STATIC_DIR))
 var handleChirpyLogo = http.StripPrefix("/assets/", http.FileServer(http.Dir(STATIC_IMG_DIR)))
+func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
 
 func main() {
 	port, err := getServerPort()
@@ -49,6 +56,7 @@ func main() {
 
 	mux.Handle("/assets/", handleChirpyLogo)
 	mux.Handle("/", handleHome)
+	mux.HandleFunc("/healthz/", handleHealthCheck)
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
