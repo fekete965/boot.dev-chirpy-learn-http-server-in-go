@@ -14,6 +14,7 @@ import (
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
 const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
+var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 
 type apiConfig struct {
 	FileserverHits atomic.Int32
