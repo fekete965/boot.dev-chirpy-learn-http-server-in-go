@@ -77,9 +77,7 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	respondWithPlainText(w, http.StatusOK, "OK")
 }))
 
 var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -105,17 +103,12 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 		
 		data, err := json.Marshal(payload)
 		if err != nil {
-			errorMsg := fmt.Sprintf("error marshalling response: %v", err)
-
-			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errorMsg))
+			errorMessage := fmt.Sprintf("error marshalling response: %v", err)
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 			return
 		}
 		
-		w.Header().Add("Content-Type", "text/json; charset=utf-8")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
+		respondWithJSON(w, http.StatusBadRequest, data)
 		return
 	}
 
@@ -127,17 +120,12 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 		
 		data, err := json.Marshal(payload)
 		if err != nil {
-			errorMsg := fmt.Sprintf("error marshalling response: %v", err)
-			
-			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errorMsg))
+			errorMessage := fmt.Sprintf("error marshalling response: %v", err)
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 			return
 		}
 		
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Add("Content-Type", "text/json; charset=utf-8")
-		w.Write(data)
+		respondWithJSON(w, http.StatusBadRequest, data)
 		return
 	}
 
@@ -148,17 +136,12 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 
 	data, err := json.Marshal(payload)
 	if err != nil {
-		errorMsg := fmt.Sprintf("error marshalling response: %v", err)
-
-		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(errorMsg))
+		errorMessage := fmt.Sprintf("error marshalling response: %v", err)
+		respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 		return
 	}
 
-	w.Header().Add("Content-Type", "text/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	respondWithJSON(w, http.StatusOK, data)
 }))
 
 func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
