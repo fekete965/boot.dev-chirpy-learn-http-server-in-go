@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,6 +54,84 @@ var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWr
 	w.Write([]byte("OK"))
 }))
 
+var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	type validateChirpResource struct {
+		Body string `json:"body"`
+	}
+	type validateChirpResponse struct {
+		Error string `json:"error,omitempty"`
+		Valid bool `json:"valid"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	var validatedChirp validateChirpResource
+	err := decoder.Decode(&validatedChirp)
+
+	if err != nil {		
+		payload := validateChirpResponse{
+			Error: "Something went wrong",
+			Valid: false,
+		}
+		
+		data, err := json.Marshal(payload)
+		if err != nil {
+			errorMsg := fmt.Sprintf("error marshalling response: %v", err)
+
+			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errorMsg))
+			return
+		}
+		
+		w.Header().Add("Content-Type", "text/json; charset=utf-8")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(data)
+		return
+	}
+
+	if len(validatedChirp.Body) > 140 {
+		payload := validateChirpResponse{
+			Error: "Chirp is too long",
+			Valid: false,
+		}
+		
+		data, err := json.Marshal(payload)
+		if err != nil {
+			errorMsg := fmt.Sprintf("error marshalling response: %v", err)
+			
+			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errorMsg))
+			return
+		}
+		
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Add("Content-Type", "text/json; charset=utf-8")
+		w.Write(data)
+		return
+	}
+
+	payload := validateChirpResponse{
+		Error: "",
+		Valid: true,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		errorMsg := fmt.Sprintf("error marshalling response: %v", err)
+
+		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(errorMsg))
+		return
+	}
+
+	w.Header().Add("Content-Type", "text/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}))
 
 func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +180,7 @@ func main() {
 	mux.Handle("GET /admin/metrics", cfg.middlewareHandleMetrics())
 	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
+	mux.Handle("POST /api/validate_chirp", handleValidateChirp)
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
