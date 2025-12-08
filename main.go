@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync/atomic"
 )
 
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
 const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
 
-type ServerConfig struct {
+type apiConfig struct {
+	FileserverHits atomic.Int32
 	Port int
 }
 
@@ -54,7 +56,8 @@ func main() {
 		port = DEFAULT_PORT
 	}
 
-	cfg := ServerConfig{
+	cfg := apiConfig{
+		FileserverHits: atomic.Int32{},
 		Port: port,
 	}
 
