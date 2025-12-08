@@ -49,6 +49,18 @@ func cleanChirp(textToClean string, profaneWords []string) string {
 	return strings.Join(chunks, " ")
 }
 
+func respondWithPlainText(w http.ResponseWriter, statusCode int, text string) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(statusCode)
+	w.Write([]byte(text))
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int, data []byte) {
+	w.Header().Add("Content-Type", "text/json; charset=utf-8")
+	w.WriteHeader(statusCode)
+	w.Write(data)
+}
+
 func middlewareLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v: %v", r.Method, r.URL.Path)
