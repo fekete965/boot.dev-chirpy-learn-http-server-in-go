@@ -91,7 +91,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/healthz/", handleHealthCheck)
+	mux.Handle("/metrics/", cfg.middlewareHandleMetrics())
+	mux.Handle("/reset/", cfg.middlewareHandleReset())
+	mux.Handle("/healthz/", handleHealthCheck)
 	mux.Handle("/app/assets/", handleAssets)
 	mux.Handle("/app", handleHome)
 
