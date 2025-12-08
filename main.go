@@ -86,7 +86,7 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	}
 	type validateChirpResponse struct {
 		Error string `json:"error,omitempty"`
-		Valid bool `json:"valid"`
+		CleanedBody string `json:"cleaned_body,omitempty"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -98,7 +98,7 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	if err != nil {		
 		payload := validateChirpResponse{
 			Error: "Something went wrong",
-			Valid: false,
+			CleanedBody: "",
 		}
 		
 		data, err := json.Marshal(payload)
@@ -115,7 +115,7 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	if len(validatedChirp.Body) > 140 {
 		payload := validateChirpResponse{
 			Error: "Chirp is too long",
-			Valid: false,
+			CleanedBody: "",
 		}
 		
 		data, err := json.Marshal(payload)
@@ -131,7 +131,7 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 
 	payload := validateChirpResponse{
 		Error: "",
-		Valid: true,
+		CleanedBody: cleanChirp(validatedChirp.Body, PROFANE_WORDS),
 	}
 
 	data, err := json.Marshal(payload)
