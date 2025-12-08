@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync/atomic"
 )
 
@@ -32,6 +33,20 @@ func getServerPort() (int, error) {
 	}
 
 	return port, nil
+}
+
+func cleanChirp(textToClean string, profaneWords []string) string {
+	chunks := strings.Split(textToClean, " ")
+
+	for cIndex, c := range chunks {
+		for _, word := range profaneWords {
+			if strings.EqualFold(c, word) {
+				chunks[cIndex] = strings.Repeat("*", 4)
+			}
+		}
+	}
+
+	return strings.Join(chunks, " ")
 }
 
 func middlewareLogger(next http.Handler) http.Handler {
