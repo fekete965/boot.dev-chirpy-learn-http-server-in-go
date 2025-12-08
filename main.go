@@ -56,9 +56,16 @@ var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWr
 
 func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		result := fmt.Sprintf("Hits: %d", cfg.FileserverHits.Load())
+		result := fmt.Sprintf(`
+			<html>
+				<body>
+					<h1>Welcome, Chirpy Admin</h1>
+					<p>Chirpy has been visited %d times!</p>
+				</body>
+			</html>`,
+			cfg.FileserverHits.Load())
 	
-		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Add("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(result))
 	}))
