@@ -75,7 +75,7 @@ func (cfg *apiConfig) middlewareHandleReset() http.Handler {
 }
 
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
-var handleAssets = middlewareLogger(http.StripPrefix("/app/assets/", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
+var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
 func main() {
 	port, err := getServerPort()
@@ -91,11 +91,11 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/metrics/", cfg.middlewareHandleMetrics())
-	mux.Handle("/reset/", cfg.middlewareHandleReset())
-	mux.Handle("/healthz/", handleHealthCheck)
+	mux.Handle("GET /metrics", cfg.middlewareHandleMetrics())
+	mux.Handle("POST /reset", cfg.middlewareHandleReset())
+	mux.Handle("GET /healthz", handleHealthCheck)
 	mux.Handle("/app/assets/", handleAssets)
-	mux.Handle("/app", cfg.middlewareMetricsInc(handleHome))
+	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
