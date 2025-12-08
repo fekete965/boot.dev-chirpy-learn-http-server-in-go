@@ -91,8 +91,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /api/metrics", cfg.middlewareHandleMetrics())
-	mux.Handle("POST /api/reset", cfg.middlewareHandleReset())
+	mux.Handle("GET /admin/metrics", cfg.middlewareHandleMetrics())
+	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
