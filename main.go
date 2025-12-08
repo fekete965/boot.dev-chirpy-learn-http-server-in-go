@@ -40,11 +40,39 @@ func middlewareLogger(next http.Handler) http.Handler {
 	})
 }
 
+func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.FileserverHits.Add(1)
+		next.ServeHTTP(w, r)
+	})
+}
+
 var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }))
+
+
+func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		result := fmt.Sprintf("Hits: %d", cfg.FileserverHits.Load())
+	
+		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(result))
+	}))
+}
+
+func (cfg *apiConfig) middlewareHandleReset() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.FileserverHits.Store(0)
+
+		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Metric has been reset"))
+	}))
+}
 
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets/", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
