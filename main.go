@@ -95,7 +95,7 @@ func main() {
 	mux.Handle("/reset/", cfg.middlewareHandleReset())
 	mux.Handle("/healthz/", handleHealthCheck)
 	mux.Handle("/app/assets/", handleAssets)
-	mux.Handle("/app", handleHome)
+	mux.Handle("/app", cfg.middlewareMetricsInc(handleHome))
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
