@@ -31,15 +31,21 @@ func getServerPort() (int, error) {
 	return port, nil
 }
 
-func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+func middlewareLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v: %v", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
 
+var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
-}
+}))
 
-var handleHome = http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR)))
-var handleAssets = http.StripPrefix("/app/assets/", http.FileServer(http.Dir(STATIC_ASSETS_DIR)))
+var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
+var handleAssets = middlewareLogger(http.StripPrefix("/app/assets/", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
 func main() {
 	port, err := getServerPort()
