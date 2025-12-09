@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	_ "github.com/lib/pq"
 )
 
 const DEFAULT_PORT = 8080
@@ -17,6 +21,7 @@ const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
 var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 
 type apiConfig struct {
+	DbQueries *database.Queries
 	FileserverHits atomic.Int32
 	Port int
 }
@@ -84,6 +89,7 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	type validateChirpResource struct {
 		Body string `json:"body"`
 	}
+
 	type validateChirpResponse struct {
 		Error string `json:"error,omitempty"`
 		CleanedBody string `json:"cleaned_body,omitempty"`
@@ -175,6 +181,17 @@ var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
 func main() {
+	dbUrl := os.Getenv("DB_URL")
+	if dbUrl == "" {
+		log.Fatal("DB_URL is not set")
+	}
+
+	dbConnection, err := sql.Open("postgres", dbUrl)
+	if err != nil {
+		log.Fatalf("error connecting to the database: %v", err)
+	}
+
+	
 	port, err := getServerPort()
 	if err != nil {
 		fmt.Printf("error getting server port: %v\nfalling back to default port: %d\n", err, DEFAULT_PORT)
@@ -182,6 +199,7 @@ func main() {
 	}
 
 	cfg := apiConfig{
+		DbQueries: database.New(dbConnection),
 		FileserverHits: atomic.Int32{},
 		Port: port,
 	}
