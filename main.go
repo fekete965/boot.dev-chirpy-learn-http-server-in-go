@@ -167,24 +167,43 @@ func (cfg *apiConfig) middlewareHandleReset() http.Handler {
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
-func main() {
+type envVars struct {
+	DbUrl string
+	Platform string
+	Port int
+}
+
+func loadEnv() (envVars, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		errorMessage := fmt.Errorf("error loading env file: %v", err)
+		return envVars{}, errorMessage
+	}
+
 	dbUrl := os.Getenv("DB_URL")
 	if dbUrl == "" {
-		log.Fatal("DB_URL is not set")
+		errorMessage := fmt.Errorf("DB_URL is not set")
+		return envVars{}, errorMessage
 	}
 
-	dbConnection, err := sql.Open("postgres", dbUrl)
-	if err != nil {
-		log.Fatalf("error connecting to the database: %v", err)
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		errorMessage := fmt.Errorf("PLATFORM is not set")
+		return envVars{}, errorMessage
 	}
 
-	
 	port, err := getServerPort()
 	if err != nil {
 		fmt.Printf("error getting server port: %v\nfalling back to default port: %d\n", err, DEFAULT_PORT)
 		port = DEFAULT_PORT
 	}
 
+	return envVars{
+		DbUrl: dbUrl,
+		Platform: platform,
+		Port: port,
+	}, nil
+}
 	cfg := apiConfig{
 		DbQueries: database.New(dbConnection),
 		FileserverHits: atomic.Int32{},
