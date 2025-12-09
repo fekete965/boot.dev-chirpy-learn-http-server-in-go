@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	"github.com/lib/pq"
 )
 
 const DEFAULT_PORT = 8080
@@ -158,7 +158,22 @@ func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
 
 func (cfg *apiConfig) middlewareHandleReset() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if cfg.Platform != "dev" {
+			respondWithPlainText(w, http.StatusForbidden, "Forbidden operation")
+			return
+		}
+
+		// Reset the metrics
 		cfg.FileserverHits.Store(0)
+
+		// Reset the database
+		err := cfg.DbQueries.DeleteAllUsers(r.Context())
+		if err != nil {
+			errorMessage := fmt.Sprintf("error deleting all users: %v", err)
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
 
 		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
