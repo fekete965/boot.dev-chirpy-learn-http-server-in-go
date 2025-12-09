@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,8 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/lib/pq"
 )
@@ -181,6 +184,61 @@ func (cfg *apiConfig) middlewareHandleReset() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleCreateUser() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type createUserResource struct {
+			Email string `json:"email"`
+		}
+		
+		type createUserResponse struct {
+			Id uuid.UUID `json:"id"`
+			Email string `json:"email"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		var payload createUserResource
+		err := decoder.Decode(&payload)
+		if err != nil {
+			respondWithPlainText(w, http.StatusBadRequest, "Invalid request body")
+			return 
+		}
+
+		newUser, err := cfg.DbQueries.CreateUser(r.Context(), database.CreateUserParams{
+			ID: uuid.New(),
+			Email: payload.Email,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+
+		if err != nil {
+			var pqErr *pq.Error
+
+			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+				errorMessage := fmt.Sprintf("Email already in use: %s", payload.Email)
+				respondWithPlainText(w, http.StatusConflict, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("Error creating user: %v", err)
+			respondWithPlainText(w, http.StatusConflict, errorMessage)
+			return
+		}
+
+		data := createUserResponse{
+			Id: newUser.ID,
+			Email: newUser.Email,
+			CreatedAt: newUser.CreatedAt,
+			UpdatedAt: newUser.UpdatedAt,
+		}
+
+		respondWithJSON(w, http.StatusCreated, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -246,6 +304,7 @@ func main() {
 	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
 	mux.Handle("POST /api/validate_chirp", handleValidateChirp)
+	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
