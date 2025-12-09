@@ -61,10 +61,18 @@ func respondWithPlainText(w http.ResponseWriter, statusCode int, text string) {
 	w.Write([]byte(text))
 }
 
-func respondWithJSON(w http.ResponseWriter, statusCode int, data []byte) {
+func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+	marshalledData, err := json.Marshal(data)
+	if err != nil {
+		errorMessage := fmt.Sprintf("error marshalling response: %v", err)
+		
+		respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+		return
+	}
+
 	w.Header().Add("Content-Type", "text/json; charset=utf-8")
 	w.WriteHeader(statusCode)
-	w.Write(data)
+	w.Write(marshalledData)
 }
 
 func middlewareLogger(next http.Handler) http.Handler {
@@ -102,16 +110,9 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	err := decoder.Decode(&validatedChirp)
 
 	if err != nil {		
-		payload := validateChirpResponse{
+		data := validateChirpResponse{
 			Error: "Something went wrong",
 			CleanedBody: "",
-		}
-		
-		data, err := json.Marshal(payload)
-		if err != nil {
-			errorMessage := fmt.Sprintf("error marshalling response: %v", err)
-			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
-			return
 		}
 		
 		respondWithJSON(w, http.StatusBadRequest, data)
@@ -119,32 +120,18 @@ var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.Response
 	}
 
 	if len(validatedChirp.Body) > 140 {
-		payload := validateChirpResponse{
+		data := validateChirpResponse{
 			Error: "Chirp is too long",
 			CleanedBody: "",
-		}
-		
-		data, err := json.Marshal(payload)
-		if err != nil {
-			errorMessage := fmt.Sprintf("error marshalling response: %v", err)
-			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
-			return
 		}
 		
 		respondWithJSON(w, http.StatusBadRequest, data)
 		return
 	}
 
-	payload := validateChirpResponse{
+	data := validateChirpResponse{
 		Error: "",
 		CleanedBody: cleanChirp(validatedChirp.Body, PROFANE_WORDS),
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		errorMessage := fmt.Sprintf("error marshalling response: %v", err)
-		respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
-		return
 	}
 
 	respondWithJSON(w, http.StatusOK, data)
