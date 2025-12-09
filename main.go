@@ -13,6 +13,7 @@ import (
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
 )
 
 const DEFAULT_PORT = 8080
@@ -23,11 +24,12 @@ var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 type apiConfig struct {
 	DbQueries *database.Queries
 	FileserverHits atomic.Int32
+	Platform string
 	Port int
 }
 
 func getServerPort() (int, error) {
-	portEnv := os.Getenv("CHIRPY_PORT")
+	portEnv := os.Getenv("PORT")
 
 	if portEnv == "" {
 		return -1, fmt.Errorf("no port defined")
@@ -204,10 +206,23 @@ func loadEnv() (envVars, error) {
 		Port: port,
 	}, nil
 }
+
+func main() {
+	envVars, err := loadEnv()
+	if err != nil {
+		log.Fatalf("error loading environment variables: %v", err)
+	}
+
+	dbConnection, err := sql.Open("postgres", envVars.DbUrl)
+	if err != nil {
+		log.Fatalf("error connecting to the database: %v", err)
+	}
+
 	cfg := apiConfig{
 		DbQueries: database.New(dbConnection),
 		FileserverHits: atomic.Int32{},
-		Port: port,
+		Platform: envVars.Platform,
+		Port: envVars.Port,
 	}
 
 	mux := http.NewServeMux()
@@ -230,5 +245,5 @@ func loadEnv() (envVars, error) {
 		log.Fatalf("could not start the server: %v", err)
 	}
 
-	fmt.Printf("server start on port: %d\n", port)
+	fmt.Printf("server started on port: %d\n", envVars.Port)
 }
