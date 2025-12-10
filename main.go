@@ -259,6 +259,39 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleGetAllChirps() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type getAllChirpResponse struct {
+			ID uuid.UUID `json:"id"`
+			UserID uuid.UUID `json:"user_id"`
+			Body string `json:"body"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+		
+		chirps, err := cfg.DbQueries.GetAllChirps(r.Context())
+		if err != nil {
+			errorMessage := fmt.Sprintf("error getting all chirps: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		data := make([]getAllChirpResponse, len(chirps))
+		for i, chirp := range chirps {
+			data[i] = getAllChirpResponse{
+				ID: chirp.ID,
+				UserID: chirp.UserID,
+				Body: chirp.Body,
+				CreatedAt: chirp.CreatedAt,
+				UpdatedAt: chirp.UpdatedAt,
+			}
+		}
+
+		respondWithJSON(w, http.StatusOK, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -324,6 +357,7 @@ func main() {
 	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
 	mux.Handle("POST /api/chirps", cfg.handleCreateChirp())
+	mux.Handle("GET /api/chirps", cfg.handleGetAllChirps())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
