@@ -301,6 +301,51 @@ func safeParseUUID(str string) (uuid.UUID, error) {
 	return uuid.MustParse(str), nil
 }
 
+func (cfg *apiConfig) handleGetChirpById() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type getChirpByIdResponse struct {
+			ID uuid.UUID `json:"id"`
+			UserId uuid.UUID `json:"user_id"`
+			Body string `json:"body"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+		
+		chirpID, err := safeParseUUID(r.PathValue("chirpID"))
+		if err != nil {			
+			errorMessage := fmt.Sprintf("cannot parse chirpID: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+
+		chirp, err := cfg.DbQueries.GetChirpById(r.Context(), chirpID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("chirp not found by id #%v", chirpID)
+				
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("error getting chirp by id #%v: %v", chirpID, err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		data := getChirpByIdResponse{
+			ID: chirp.ID,
+			UserId: chirp.UserID,
+			Body: chirp.Body,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+		}
+
+		respondWithJSON(w, http.StatusOK, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -367,6 +412,7 @@ func main() {
 	mux.Handle("GET /api/healthz", handleHealthCheck)
 	mux.Handle("POST /api/chirps", cfg.handleCreateChirp())
 	mux.Handle("GET /api/chirps", cfg.handleGetAllChirps())
+	mux.Handle("GET /api/chirps/{chirpID}", cfg.handleGetChirpById())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
