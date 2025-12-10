@@ -98,50 +98,6 @@ var handleHealthCheck = middlewareLogger(http.HandlerFunc(func(w http.ResponseWr
 	respondWithPlainText(w, http.StatusOK, "OK")
 }))
 
-var handleValidateChirp = middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	type validateChirpResource struct {
-		Body string `json:"body"`
-	}
-
-	type validateChirpResponse struct {
-		Error string `json:"error,omitempty"`
-		CleanedBody string `json:"cleaned_body,omitempty"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-
-	var validatedChirp validateChirpResource
-	err := decoder.Decode(&validatedChirp)
-
-	if err != nil {		
-		data := validateChirpResponse{
-			Error: "Something went wrong",
-			CleanedBody: "",
-		}
-		
-		respondWithJSON(w, http.StatusBadRequest, data)
-		return
-	}
-
-	if len(validatedChirp.Body) > 140 {
-		data := validateChirpResponse{
-			Error: "Chirp is too long",
-			CleanedBody: "",
-		}
-		
-		respondWithJSON(w, http.StatusBadRequest, data)
-		return
-	}
-
-	data := validateChirpResponse{
-		Error: "",
-		CleanedBody: cleanChirp(validatedChirp.Body, PROFANE_WORDS),
-	}
-
-	respondWithJSON(w, http.StatusOK, data)
-}))
-
 func (cfg *apiConfig) middlewareHandleMetrics() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		result := fmt.Sprintf(`
@@ -303,7 +259,6 @@ func main() {
 	mux.Handle("GET /admin/metrics", cfg.middlewareHandleMetrics())
 	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
-	mux.Handle("POST /api/validate_chirp", handleValidateChirp)
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
