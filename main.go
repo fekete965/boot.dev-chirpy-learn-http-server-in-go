@@ -292,6 +292,15 @@ func (cfg *apiConfig) handleGetAllChirps() http.Handler {
 	}))
 }
 
+func safeParseUUID(str string) (uuid.UUID, error) {
+	err := uuid.Validate(str)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("invalid UUID: %v", err)
+	}
+
+	return uuid.MustParse(str), nil
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
