@@ -195,6 +195,70 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleCreateChirp() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type validateChirpResource struct {
+			Body string `json:"body"`
+			UserID string `json:"user_id"`
+		}
+	
+		type validateChirpResponse struct {
+			ID uuid.UUID `json:"id"`
+			UserID uuid.UUID `json:"user_id"`
+			Body string `json:"body"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+	
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+	
+		var validatedChirp validateChirpResource
+		err := decoder.Decode(&validatedChirp)
+	
+		if err != nil {
+			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+	
+		if len(validatedChirp.Body) > 140 {
+			errorMessage := "Chirp is too long"
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+	
+		cleanedBody := cleanChirp(validatedChirp.Body, PROFANE_WORDS)
+
+		newChirp, err := cfg.DbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
+			ID: uuid.New(),
+			UserID: uuid.MustParse(validatedChirp.UserID),
+			Body: cleanedBody,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+
+		if err != nil {
+			errorMessage := fmt.Sprintf("error creating chirp: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		data := validateChirpResponse{
+			ID: newChirp.ID,
+			UserID: newChirp.UserID,
+			Body: newChirp.Body,
+			CreatedAt: newChirp.CreatedAt,
+			UpdatedAt: newChirp.UpdatedAt,
+		}
+		
+		respondWithJSON(w, http.StatusCreated, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -259,6 +323,7 @@ func main() {
 	mux.Handle("GET /admin/metrics", cfg.middlewareHandleMetrics())
 	mux.Handle("POST /admin/reset", cfg.middlewareHandleReset())
 	mux.Handle("GET /api/healthz", handleHealthCheck)
+	mux.Handle("POST /api/chirps", cfg.handleCreateChirp())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
