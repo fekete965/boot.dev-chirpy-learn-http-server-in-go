@@ -1,6 +1,12 @@
 package auth
 
-import "testing"
+import (
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 
 func TestHashPassword(t *testing.T) {
@@ -46,5 +52,73 @@ func TestCheckPasswordHashWithWrongPassword(t *testing.T) {
 
 	if match {
 		t.Errorf("CheckPasswordHash(%v, %v) returned %v instead of %v in TestCheckPasswordHash", wrongPassword, hash, match, false)
+	}
+}
+
+func TestMakeJWT(t *testing.T) {
+	userID := uuid.New()
+	tokenSecret := "test_token_secret"
+	expiresIn := 3 * time.Hour
+
+	_, err := MakeJWT(userID, tokenSecret, expiresIn)
+	if err != nil {
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestMakeJWT: %v", userID, tokenSecret, expiresIn, err)
+	}
+}
+
+func TestValidateJWT(t *testing.T) {
+	userID := uuid.New()
+	tokenSecret := "test_token_secret"
+	expiresIn := 3 * time.Hour
+
+	token, err := MakeJWT(userID, tokenSecret, expiresIn)
+	if err != nil {
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWT: %v", userID, tokenSecret, expiresIn, err)
+	}
+
+	validatedUserID, err := ValidateJWT(token, tokenSecret)
+	if err != nil {
+		t.Errorf("ValidatedJWT(%v, %v) returned an error in TestValidateJWT: %v", token, tokenSecret, err)
+	}
+
+	if validatedUserID != userID {
+		t.Errorf("The user id %v returned by ValidatedJWT(%v, %v) doesn't match the expected user id %v", validatedUserID, token, tokenSecret, userID)
+	}
+}
+
+func TestValidateJWTWithExpiredToken(t *testing.T) {
+	userID := uuid.New()
+	tokenSecret := "test_token_secret"
+	expiresIn := -1 * time.Hour
+
+	token, err := MakeJWT(userID, tokenSecret, expiresIn)
+	if err != nil {
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWTWithExpiredToken: %v", userID, tokenSecret, expiresIn, err)
+	}
+
+	_, err = ValidateJWT(token, tokenSecret)
+	if err == nil {
+		t.Errorf("ValidatedJWT(%v, %v) should have returned an error in TestValidateJWTWithExpiredToken: %v", token, tokenSecret, err)
+	}
+
+	if !strings.Contains(err.Error(), "token is expired") {
+		t.Errorf("ValidatedJWT(%v, %v) should have returned \"token is expired\" error instead of %v", token, tokenSecret, err.Error())
+	}
+}
+
+func TestValidateJWTWithWrongSecret(t *testing.T) {
+	userID := uuid.New()
+	tokenSecret := "test_token_secret"
+	wrongTokenSecret := "wrong_token_secret"
+	expiresIn := 3 * time.Hour
+
+	token, err := MakeJWT(userID, tokenSecret, expiresIn)
+	if err != nil {
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWTWithExpiredToken: %v", userID, tokenSecret, expiresIn, err)
+	}
+
+	_, err = ValidateJWT(token, wrongTokenSecret)
+	if err == nil {
+		t.Errorf("ValidatedJWT(%v, %v) should have returned an error in TestValidateJWTWithWrongSecret: %v", token, wrongTokenSecret, err)
 	}
 }
