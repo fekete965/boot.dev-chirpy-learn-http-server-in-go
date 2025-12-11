@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -144,6 +145,7 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type createUserResource struct {
 			Email string `json:"email"`
+			Password string `json:"password"`
 		}
 		
 		type createUserResponse struct {
@@ -163,9 +165,19 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 			return 
 		}
 
+		hashedPassword, err := auth.HashPassword(payload.Password)
+		if err != nil {
+			fmt.Printf("error hashing password: %v", err)
+			errorMessage := "error during password handling"
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
 		newUser, err := cfg.DbQueries.CreateUser(r.Context(), database.CreateUserParams{
 			ID: uuid.New(),
 			Email: payload.Email,
+			HashedPassword: hashedPassword,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		})
@@ -323,7 +335,7 @@ func (cfg *apiConfig) handleGetChirpById() http.Handler {
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				errorMessage := fmt.Sprintf("chirp not found by id #%v", chirpID)
-				
+
 				respondWithPlainText(w, http.StatusNotFound, errorMessage)
 				return
 			}
