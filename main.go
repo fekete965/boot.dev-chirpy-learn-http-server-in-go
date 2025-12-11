@@ -358,6 +358,72 @@ func (cfg *apiConfig) handleGetChirpById() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleLogin() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type loginResource struct {
+			Email string `json:"email"`
+			Password string `json:"password"`
+		}
+
+		type loginResponse struct {
+			ID uuid.UUID `json:"id"`
+			Email string `json:"email"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		var payload loginResource
+		err := decoder.Decode(&payload)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
+
+			respondWithPlainText(w, http.StatusBadGateway, errorMessage)
+			return
+		}
+
+		user, err := cfg.DbQueries.FindUserByEmail(r.Context(), payload.Email)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("user not found by email: %s", payload.Email)
+				
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+			errorMessage := fmt.Sprintf("error getting user by email %v: %s", payload.Email, err)
+				
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		match, err := auth.CheckPasswordHash(payload.Password, user.HashedPassword)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during user validation: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		if !match {
+			errorMessage := "invalid user credentials"
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		data := loginResponse{
+			ID: user.ID,
+			Email: user.Email,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		}
+
+		respondWithJSON(w, http.StatusOK, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -426,6 +492,7 @@ func main() {
 	mux.Handle("GET /api/chirps", cfg.handleGetAllChirps())
 	mux.Handle("GET /api/chirps/{chirpID}", cfg.handleGetChirpById())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
+	mux.Handle("POST /api/login", cfg.handleLogin())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
