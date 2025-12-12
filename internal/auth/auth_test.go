@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -120,5 +121,53 @@ func TestValidateJWTWithWrongSecret(t *testing.T) {
 	_, err = ValidateJWT(token, wrongTokenSecret)
 	if err == nil {
 		t.Errorf("ValidatedJWT(%v, %v) should have returned an error in TestValidateJWTWithWrongSecret: %v", token, wrongTokenSecret, err)
+
+func TestGetBearerToken(t *testing.T) {
+	testToken := "test_token"
+
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+
+	request.Header.Set("Authorization", "Bearer " + testToken)
+
+	bearerToken, err := GetBearerToken(request)
+	if err != nil {
+		t.Errorf("GetBearerToken(...) returned an error: %v", err)
+	}
+
+	if bearerToken != testToken {
+		t.Errorf("GetBearerToken(...) returned %v instead of %v", bearerToken, testToken)
+	}
+}
+
+func TestGetBearerTokenWithoutAuthorizationHeader(t *testing.T) {
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+	
+	// Request is missing the Authorization header
+	_, err = GetBearerToken(request)
+	if err == nil {
+		t.Error("GetBearerToken(...) should have returned and error stating that no authorization header was provided")
+	}
+}
+
+func TestGetBearerTokenWithInvalidAuthorizationHeaderFormat(t *testing.T) {
+	testToken := "test_token"
+
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+
+	// Add Authorization header without the correct prefix
+	request.Header.Set("Authorization", testToken)
+
+	_, err = GetBearerToken(request)
+	if err == nil {
+		t.Error("GetBearerToken(...) should have returned and error stating that the authorization header format is invalid")
 	}
 }

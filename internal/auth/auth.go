@@ -2,6 +2,8 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -31,6 +33,7 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 
 	return token.SignedString([]byte(tokenSecret))
 }
+
 func ValidateJWT(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(tokenSecret), nil
@@ -54,4 +57,19 @@ func ValidateJWT(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	return userID, nil
+}
+
+const BEARER_TOKEN_PREFIX = "Bearer "
+func GetBearerToken(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return "", fmt.Errorf("no authorization header provided")
+	}
+	
+	if !strings.HasPrefix(token, BEARER_TOKEN_PREFIX) {
+		return "", fmt.Errorf("invalid authorization header format")
+	}
+
+	trimmedToken := strings.TrimPrefix(token, BEARER_TOKEN_PREFIX)
+	return trimmedToken, nil
 }
