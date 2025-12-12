@@ -63,6 +63,11 @@ func cleanChirp(textToClean string, profaneWords []string) string {
 	return strings.Join(chunks, " ")
 }
 
+func respondNoContent(w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func respondWithPlainText(w http.ResponseWriter, statusCode int, text string) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(statusCode)
