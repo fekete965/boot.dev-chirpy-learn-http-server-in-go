@@ -70,3 +70,20 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, erro
 	)
 	return i, err
 }
+
+const findUserById = `-- name: FindUserById :one
+SELECT id, email, created_at, updated_at, hashed_password FROM users WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUserById, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HashedPassword,
+	)
+	return i, err
+}
