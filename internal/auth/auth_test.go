@@ -172,3 +172,23 @@ func TestGetBearerTokenWithInvalidAuthorizationHeaderFormat(t *testing.T) {
 		t.Error("GetBearerToken(...) should have returned and error stating that the authorization header format is invalid")
 	}
 }
+
+func TestMakeRefreshToken(t *testing.T) {
+	refreshToken, err := MakeRefreshToken()
+	if err != nil {
+		t.Errorf("MakeRefreshToken() returned an error: %v", err)
+	}
+
+	if len(refreshToken) != 64 {
+		t.Errorf("MakeRefreshToken() returned a refresh token with length %v instead of 64", len(refreshToken))
+	}
+
+	secondRefreshToken, err := MakeRefreshToken()
+	if err != nil {
+		t.Errorf("MakeRefreshToken() returned an error after the first call: %v", err)
+	}
+
+	if secondRefreshToken == refreshToken {
+		t.Errorf("MakeRefreshToken() returned the same refresh token after the first call: %v", secondRefreshToken)
+	}
+}
