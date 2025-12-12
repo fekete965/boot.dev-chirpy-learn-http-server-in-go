@@ -23,6 +23,7 @@ import (
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
 const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
+var DEFAULT_EXPIRES_IN = 1 * time.Hour
 var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 
 type apiConfig struct {
@@ -212,7 +213,6 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type validateChirpResource struct {
 			Body string `json:"body"`
-			UserID string `json:"user_id"`
 		}
 	
 		type validateChirpResponse struct {
@@ -243,7 +243,7 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 		defer r.Body.Close()
 	
 		var validatedChirp validateChirpResource
-		err := decoder.Decode(&validatedChirp)
+		err = decoder.Decode(&validatedChirp)
 	
 		if err != nil {
 			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
@@ -251,7 +251,7 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
 			return
 		}
-	
+
 		if len(validatedChirp.Body) > 140 {
 			errorMessage := "Chirp is too long"
 
@@ -259,11 +259,26 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 			return
 		}
 	
+		user, err := cfg.DbQueries.FindUserById(r.Context(), userID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := "user not found"
+
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+			
+			errorMessage := fmt.Sprintf("error getting user by id: %v", err)
+			respondWithPlainText(w, http.StatusNotFound, errorMessage)
+			return
+		}
+
+	
 		cleanedBody := cleanChirp(validatedChirp.Body, PROFANE_WORDS)
 
 		newChirp, err := cfg.DbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
 			ID: uuid.New(),
-			UserID: uuid.MustParse(validatedChirp.UserID),
+			UserID: user.ID,
 			Body: cleanedBody,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -379,6 +394,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type loginResource struct {
 			Email string `json:"email"`
+			ExpiresInSeconds *float64 `json:"expires_in_seconds"`
 			Password string `json:"password"`
 		}
 
@@ -387,6 +403,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 			Email string `json:"email"`
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
+			Token string `json:"token"`
 		}
 
 		decoder := json.NewDecoder(r.Body)
@@ -430,11 +447,28 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 			return
 		}
 
+		expiresIn := DEFAULT_EXPIRES_IN
+		if payload.ExpiresInSeconds != nil {
+			userExpiresIn := time.Duration(*payload.ExpiresInSeconds) * time.Second
+			if  userExpiresIn < expiresIn {
+				expiresIn = userExpiresIn
+			}
+		}
+
+		token, err := auth.MakeJWT(user.ID, cfg.JWTSecret, expiresIn)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error creating token: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
 		data := loginResponse{
 			ID: user.ID,
 			Email: user.Email,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
+			Token: token,
 		}
 
 		respondWithJSON(w, http.StatusOK, data)
@@ -446,6 +480,7 @@ var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileSer
 
 type envVars struct {
 	DbUrl string
+	JWTSecret string
 	Platform string
 	Port int
 }
@@ -469,6 +504,12 @@ func loadEnv() (envVars, error) {
 		return envVars{}, errorMessage
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		errorMessage := fmt.Errorf("JWT_SECRET is not set")
+		return envVars{}, errorMessage
+	}
+
 	port, err := getServerPort()
 	if err != nil {
 		fmt.Printf("error getting server port: %v\nfalling back to default port: %d\n", err, DEFAULT_PORT)
@@ -477,6 +518,7 @@ func loadEnv() (envVars, error) {
 
 	return envVars{
 		DbUrl: dbUrl,
+		JWTSecret: jwtSecret,
 		Platform: platform,
 		Port: port,
 	}, nil
@@ -496,6 +538,7 @@ func main() {
 	cfg := apiConfig{
 		DbQueries: database.New(dbConnection),
 		FileserverHits: atomic.Int32{},
+		JWTSecret: envVars.JWTSecret,
 		Platform: envVars.Platform,
 		Port: envVars.Port,
 	}
