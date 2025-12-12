@@ -15,9 +15,8 @@ func TestHashPassword(t *testing.T) {
 	_, err := HashPassword(testPassword)
 
 	if err != nil {
-		t.Errorf("HashPassword(%v) returned an error in TestHashPassword: %v", testPassword, err)
+		t.Errorf("HashPassword(%v) returned an error: %v", testPassword, err)
 	}
-
 }
 
 func TestCheckPasswordHashWithCorrectPassword(t *testing.T) {
@@ -25,16 +24,16 @@ func TestCheckPasswordHashWithCorrectPassword(t *testing.T) {
 	
 	hash, err := HashPassword(testPassword)
 	if err != nil {
-		t.Errorf("HashPassword(%v) returned an error in TestCheckPasswordHash: %v", testPassword, err)
+		t.Errorf("HashPassword(%v) returned an error: %v", testPassword, err)
 	}
 	
 	match, err := CheckPasswordHash(testPassword, hash)
 	if err != nil {
-		t.Errorf("CheckPasswordHash(%v, %v) returned an error in TestCheckPasswordHash: %v", testPassword, hash,err)
+		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", testPassword, hash,err)
 	}
 
 	if !match {
-		t.Errorf("CheckPasswordHash(%v, %v) returned %v instead of %v in TestCheckPasswordHash", testPassword, hash, match, true)
+		t.Errorf("CheckPasswordHash(%v, %v) returned %v instead of %v", testPassword, hash, match, true)
 	}
 }
 func TestCheckPasswordHashWithWrongPassword(t *testing.T) {
@@ -43,16 +42,16 @@ func TestCheckPasswordHashWithWrongPassword(t *testing.T) {
 	
 	hash, err := HashPassword(testPassword)
 	if err != nil {
-		t.Errorf("HashPassword(%v) returned an error in TestCheckPasswordHash: %v", testPassword, err)
+		t.Errorf("HashPassword(%v) returned an error: %v", testPassword, err)
 	}
 	
 	match, err := CheckPasswordHash(wrongPassword, hash)
 	if err != nil {
-		t.Errorf("CheckPasswordHash(%v, %v) returned an error in TestCheckPasswordHash: %v", wrongPassword, hash,err)
+		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", wrongPassword, hash,err)
 	}
 
 	if match {
-		t.Errorf("CheckPasswordHash(%v, %v) returned %v instead of %v in TestCheckPasswordHash", wrongPassword, hash, match, false)
+		t.Errorf("CheckPasswordHash(%v, %v) returned %v instead of %v", wrongPassword, hash, match, false)
 	}
 }
 
@@ -63,7 +62,7 @@ func TestMakeJWT(t *testing.T) {
 
 	_, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestMakeJWT: %v", userID, tokenSecret, expiresIn, err)
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error: %v", userID, tokenSecret, expiresIn, err)
 	}
 }
 
@@ -74,12 +73,12 @@ func TestValidateJWT(t *testing.T) {
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWT: %v", userID, tokenSecret, expiresIn, err)
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error: %v", userID, tokenSecret, expiresIn, err)
 	}
 
 	validatedUserID, err := ValidateJWT(token, tokenSecret)
 	if err != nil {
-		t.Errorf("ValidatedJWT(%v, %v) returned an error in TestValidateJWT: %v", token, tokenSecret, err)
+		t.Errorf("ValidateJWT(%v, %v) returned an error: %v", token, tokenSecret, err)
 	}
 
 	if validatedUserID != userID {
@@ -94,12 +93,12 @@ func TestValidateJWTWithExpiredToken(t *testing.T) {
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWTWithExpiredToken: %v", userID, tokenSecret, expiresIn, err)
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error: %v", userID, tokenSecret, expiresIn, err)
 	}
 
 	_, err = ValidateJWT(token, tokenSecret)
 	if err == nil {
-		t.Errorf("ValidatedJWT(%v, %v) should have returned an error in TestValidateJWTWithExpiredToken: %v", token, tokenSecret, err)
+		t.Errorf("ValidatedJWT(%v, %v) should have returned an error: %v", token, tokenSecret, err)
 	}
 
 	if !strings.Contains(err.Error(), "token is expired") {
@@ -115,12 +114,14 @@ func TestValidateJWTWithWrongSecret(t *testing.T) {
 
 	token, err := MakeJWT(userID, tokenSecret, expiresIn)
 	if err != nil {
-		t.Errorf("MakeJWT(%v, %v, %v) returned an error in TestValidateJWTWithExpiredToken: %v", userID, tokenSecret, expiresIn, err)
+		t.Errorf("MakeJWT(%v, %v, %v) returned an error: %v", userID, tokenSecret, expiresIn, err)
 	}
 
 	_, err = ValidateJWT(token, wrongTokenSecret)
 	if err == nil {
-		t.Errorf("ValidatedJWT(%v, %v) should have returned an error in TestValidateJWTWithWrongSecret: %v", token, wrongTokenSecret, err)
+		t.Errorf("ValidatedJWT(%v, %v) should have returned an error: %v", token, wrongTokenSecret, err)
+	}
+}
 
 func TestGetBearerToken(t *testing.T) {
 	testToken := "test_token"
