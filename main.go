@@ -28,6 +28,7 @@ var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 type apiConfig struct {
 	DbQueries *database.Queries
 	FileserverHits atomic.Int32
+	JWTSecret string
 	Platform string
 	Port int
 }
@@ -220,6 +221,22 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 			Body string `json:"body"`
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
+		}
+
+		bearerToken, err := auth.GetBearerToken(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		userID, err := auth.ValidateJWT(bearerToken, cfg.JWTSecret)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
 		}
 	
 		decoder := json.NewDecoder(r.Body)
