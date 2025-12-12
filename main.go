@@ -23,7 +23,8 @@ import (
 const DEFAULT_PORT = 8080
 const STATIC_DIR = "./static"
 const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
-var DEFAULT_EXPIRES_IN = 1 * time.Hour
+var DEFAULT_EXPIRES_IN = time.Hour
+var REFRESH_TOKEN_EXPIRES_IN = 60 * 24 * time.Hour
 var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 
 type apiConfig struct {
@@ -399,7 +400,6 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type loginResource struct {
 			Email string `json:"email"`
-			ExpiresInSeconds *float64 `json:"expires_in_seconds"`
 			Password string `json:"password"`
 		}
 
@@ -409,6 +409,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
 			Token string `json:"token"`
+			RefreshToken string `json:"refresh_token"`
 		}
 
 		decoder := json.NewDecoder(r.Body)
@@ -452,18 +453,35 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 			return
 		}
 
-		expiresIn := DEFAULT_EXPIRES_IN
-		if payload.ExpiresInSeconds != nil {
-			userExpiresIn := time.Duration(*payload.ExpiresInSeconds) * time.Second
-			if  userExpiresIn < expiresIn {
-				expiresIn = userExpiresIn
-			}
-		}
-
-		token, err := auth.MakeJWT(user.ID, cfg.JWTSecret, expiresIn)
+		token, err := auth.MakeJWT(user.ID, cfg.JWTSecret, DEFAULT_EXPIRES_IN)
 		if err != nil {
 			errorMessage := fmt.Sprintf("error creating token: %v", err)
 
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+		
+		refreshTokenValue, err := auth.MakeRefreshToken()
+		if err != nil {
+			errorMessage := fmt.Sprintf("error creating refresh token %v", err)
+			
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		now := time.Now()
+		expiresAt := now.Add(REFRESH_TOKEN_EXPIRES_IN)
+		refreshToken, err := cfg.DbQueries.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+			Token: refreshTokenValue,
+			UserID: user.ID,
+			ExpiresAt: expiresAt,
+			RevokedAt: sql.NullTime{},
+			CreatedAt: now,
+			UpdatedAt: now,
+		})
+		if err != nil {
+			errorMessage := fmt.Sprintf("error creating refresh token: %v", err)
+			
 			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 			return
 		}
@@ -474,6 +492,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 			Token: token,
+			RefreshToken: refreshToken.Token,
 		}
 
 		respondWithJSON(w, http.StatusOK, data)
