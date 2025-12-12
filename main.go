@@ -499,6 +499,64 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleTokenRefresh() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type tokenRefreshResponse struct {
+			Token string `json:"token"`
+		}
+
+		refreshTokenString, err := auth.GetBearerToken(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+
+		refreshToken, err := cfg.DbQueries.FindRefreshToken(r.Context(), refreshTokenString)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("refresh token not found: %v", err)
+
+				respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("error getting refresh token: %v", err)
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		if refreshToken.ExpiresAt.Before(time.Now()) {
+			errorMessage := "refresh token has expired"
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		if refreshToken.RevokedAt.Valid {
+			errorMessage := "refresh token revoked"
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		newAccessToken, err := auth.MakeJWT(refreshToken.UserID, cfg.JWTSecret, DEFAULT_EXPIRES_IN)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error creating token: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return 
+		}
+
+		data := tokenRefreshResponse{
+			Token: newAccessToken,
+		}
+
+		respondWithJSON(w, http.StatusOK, data)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -577,6 +635,7 @@ func main() {
 	mux.Handle("GET /api/chirps/{chirpID}", cfg.handleGetChirpById())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("POST /api/login", cfg.handleLogin())
+	mux.Handle("POST /api/refresh", cfg.handleTokenRefresh())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
