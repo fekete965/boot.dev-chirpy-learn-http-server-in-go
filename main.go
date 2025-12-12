@@ -557,6 +557,33 @@ func (cfg *apiConfig) handleTokenRefresh() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleTokenRevoke() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		refreshTokenString, err := auth.GetBearerToken(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+
+		now := time.Now()
+		err = cfg.DbQueries.RevokeRefreshToken(r.Context(), database.RevokeRefreshTokenParams{
+			Token: refreshTokenString,
+			RevokedAt: sql.NullTime{Time: now, Valid: true},
+			UpdatedAt: now,
+		})
+		if err != nil {
+			errorMessage := fmt.Sprintf("error revoking refresh token: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		respondNoContent(w)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -636,6 +663,7 @@ func main() {
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("POST /api/login", cfg.handleLogin())
 	mux.Handle("POST /api/refresh", cfg.handleTokenRefresh())
+	mux.Handle("POST /api/revoke", cfg.handleTokenRevoke())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
