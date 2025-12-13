@@ -215,6 +215,95 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 	}))
 }
 
+func (cfg* apiConfig) handleUpdateUser() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type updateUserResource struct {
+			Email string `json:"email"`
+			Password string `json:"password"`
+		}
+		type updateUserResponse struct {
+			Id uuid.UUID `json:"id"`
+			Email string `json:"email"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		}
+
+		accessToken, err := auth.GetBearerToken(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+		
+		userID, err := auth.ValidateJWT(accessToken, cfg.JWTSecret)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error validating token: %v", err)
+			
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+		
+		user, err := cfg.DbQueries.FindUserById(r.Context(), userID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := "user not found"
+
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return 
+			}
+
+			errorMessage := fmt.Sprintf("error getting user by id: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		payload := updateUserResource{}
+		
+		err = decoder.Decode(&payload)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
+
+			respondWithPlainText(w, http.StatusNotFound, errorMessage)
+			return
+		}
+
+		hashedPassword, err := auth.HashPassword(payload.Password)
+		if err != nil {
+			fmt.Printf("error hashing password: %v", err)
+			errorMessage := "error during password handling"
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		updatedUser, err := cfg.DbQueries.UpdateUser(r.Context(), database.UpdateUserParams{
+			ID: user.ID,
+			Email: payload.Email,
+			HashedPassword: hashedPassword,
+		})
+		if err != nil {
+			errorMessage := fmt.Sprintf("error updating user: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+		
+		data := updateUserResponse{
+			Id: updatedUser.ID,
+			Email: updatedUser.Email,
+			CreatedAt: updatedUser.CreatedAt,
+			UpdatedAt: updatedUser.UpdatedAt,
+		}
+
+		respondWithJSON(w, http.StatusOK, data)
+	}))
+}
+
 func (cfg *apiConfig) handleCreateChirp() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type validateChirpResource struct {
@@ -661,6 +750,7 @@ func main() {
 	mux.Handle("GET /api/chirps", cfg.handleGetAllChirps())
 	mux.Handle("GET /api/chirps/{chirpID}", cfg.handleGetChirpById())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
+	mux.Handle("PUT /api/users", cfg.handleUpdateUser())
 	mux.Handle("POST /api/login", cfg.handleLogin())
 	mux.Handle("POST /api/refresh", cfg.handleTokenRefresh())
 	mux.Handle("POST /api/revoke", cfg.handleTokenRevoke())
