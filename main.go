@@ -485,6 +485,84 @@ func (cfg *apiConfig) handleGetChirpById() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handleDeleteChirp() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		accessToken, err := auth.GetBearerToken(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error during authentication: %v", err)
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		userID, err := auth.ValidateJWT(accessToken, cfg.JWTSecret)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error validating token: %v", err)
+
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		user, err := cfg.DbQueries.FindUserById(r.Context(), userID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := "user not found"
+				
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("error getting user by id: %v", err)
+			respondWithPlainText(w, http.StatusNotFound, errorMessage)
+			return
+		}
+
+		chirpID, err := safeParseUUID(r.PathValue("chirpID"))
+		if err != nil {
+			errorMessage := fmt.Sprintf("cannot parse chirpID: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+		chirp, err := cfg.DbQueries.GetChirpById(r.Context(), chirpID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("chirp not found by id #%v", chirpID)
+
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+		}
+
+		if chirp.UserID != user.ID {
+			errorMessage := fmt.Sprintf("invalid permission to delete chirp #%v", chirpID)
+			
+			respondWithPlainText(w, http.StatusForbidden, errorMessage)
+			return
+		}
+
+		err = cfg.DbQueries.DeleteChirp(r.Context(), database.DeleteChirpParams{
+			ID: chirpID,
+			UserID: user.ID,
+		})
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("chirp not found by id #%v", chirpID)
+
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("error deleting chirp: %v", err)
+
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		respondNoContent(w)
+	}))
+}
+
 func (cfg *apiConfig) handleLogin() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type loginResource struct {
@@ -749,6 +827,7 @@ func main() {
 	mux.Handle("POST /api/chirps", cfg.handleCreateChirp())
 	mux.Handle("GET /api/chirps", cfg.handleGetAllChirps())
 	mux.Handle("GET /api/chirps/{chirpID}", cfg.handleGetChirpById())
+	mux.Handle("DELETE /api/chirps/{chirpID}", cfg.handleDeleteChirp())
 	mux.Handle("POST /api/users", cfg.handleCreateUser())
 	mux.Handle("PUT /api/users", cfg.handleUpdateUser())
 	mux.Handle("POST /api/login", cfg.handleLogin())
