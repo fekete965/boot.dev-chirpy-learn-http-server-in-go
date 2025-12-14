@@ -757,6 +757,64 @@ func (cfg *apiConfig) handleTokenRevoke() http.Handler {
 	}))
 }
 
+func (cfg *apiConfig) handlePolkaWebhooks() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type webhookEventData struct {
+			UserID uuid.UUID `json:"user_id"`
+		}
+
+		type webhookResource struct {
+			Event string `json:"event"`
+			Data webhookEventData `json:"data"`
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		var payload = webhookResource{}
+		err := decoder.Decode(&payload)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
+
+			respondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+
+		if payload.Event != "user.upgraded" {
+			respondNoContent(w)
+			return
+		}
+
+		user, err := cfg.DbQueries.FindUserById(r.Context(), payload.Data.UserID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				errorMessage := fmt.Sprintf("user not found by id #%v", payload.Data.UserID)
+
+				respondWithPlainText(w, http.StatusNotFound, errorMessage)
+				return
+			}
+
+			errorMessage := fmt.Sprintf("error getting user by id #%v: %v", payload.Data.UserID, err)
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+		_, err = cfg.DbQueries.UpdateUserIsChirpyRed(r.Context(), database.UpdateUserIsChirpyRedParams{
+			ID: user.ID,
+			IsChirpyRed: true,
+			UpdatedAt: time.Now(),
+		})
+		if err != nil {
+			errorMessage := fmt.Sprintf("error updating user is chirpy red: %v", err)
+
+			respondWithPlainText(w, http.StatusNotFound, errorMessage)
+			return
+		}
+
+		respondNoContent(w)
+	}))
+}
+
 var handleHome = middlewareLogger(http.StripPrefix("/app", http.FileServer(http.Dir(STATIC_DIR))))
 var handleAssets = middlewareLogger(http.StripPrefix("/app/assets", http.FileServer(http.Dir(STATIC_ASSETS_DIR))))
 
@@ -839,6 +897,7 @@ func main() {
 	mux.Handle("POST /api/login", cfg.handleLogin())
 	mux.Handle("POST /api/refresh", cfg.handleTokenRefresh())
 	mux.Handle("POST /api/revoke", cfg.handleTokenRevoke())
+	mux.Handle("POST /api/polka/webhooks", cfg.handlePolkaWebhooks())
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(handleAssets))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handleHome))
 
