@@ -159,6 +159,7 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 		type createUserResponse struct {
 			Id uuid.UUID `json:"id"`
 			Email string `json:"email"`
+			IsChirpyRed bool `json:"is_chirpy_red"`
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
 		}
@@ -207,6 +208,7 @@ func (cfg *apiConfig) handleCreateUser() http.Handler {
 		data := createUserResponse{
 			Id: newUser.ID,
 			Email: newUser.Email,
+			IsChirpyRed: newUser.IsChirpyRed,
 			CreatedAt: newUser.CreatedAt,
 			UpdatedAt: newUser.UpdatedAt,
 		}
@@ -224,6 +226,7 @@ func (cfg* apiConfig) handleUpdateUser() http.Handler {
 		type updateUserResponse struct {
 			Id uuid.UUID `json:"id"`
 			Email string `json:"email"`
+			IsChirpyRed bool `json:"is_chirpy_red"`
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
 		}
@@ -296,6 +299,7 @@ func (cfg* apiConfig) handleUpdateUser() http.Handler {
 		data := updateUserResponse{
 			Id: updatedUser.ID,
 			Email: updatedUser.Email,
+			IsChirpyRed: updatedUser.IsChirpyRed,
 			CreatedAt: updatedUser.CreatedAt,
 			UpdatedAt: updatedUser.UpdatedAt,
 		}
@@ -573,6 +577,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 		type loginResponse struct {
 			ID uuid.UUID `json:"id"`
 			Email string `json:"email"`
+			IsChirpyRed bool `json:"is_chirpy_red"`
 			CreatedAt time.Time `json:"created_at"`
 			UpdatedAt time.Time `json:"updated_at"`
 			Token string `json:"token"`
@@ -656,6 +661,7 @@ func (cfg *apiConfig) handleLogin() http.Handler {
 		data := loginResponse{
 			ID: user.ID,
 			Email: user.Email,
+			IsChirpyRed: user.IsChirpyRed,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 			Token: token,
