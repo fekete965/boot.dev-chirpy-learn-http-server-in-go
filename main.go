@@ -769,11 +769,26 @@ func (cfg *apiConfig) handlePolkaWebhooks() http.Handler {
 			Data webhookEventData `json:"data"`
 		}
 
+		apiKey, err := auth.GetAPIKey(r)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error getting api key: %v", err)
+			
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+
+		if apiKey != cfg.PolkaWebhookSecret {
+			errorMessage := "invalid api key"
+			
+			respondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			return
+		}
+		
 		decoder := json.NewDecoder(r.Body)
 		defer r.Body.Close()
 
 		var payload = webhookResource{}
-		err := decoder.Decode(&payload)
+		err = decoder.Decode(&payload)
 		if err != nil {
 			errorMessage := fmt.Sprintf("error decoding request body: %v", err)
 
