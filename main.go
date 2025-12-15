@@ -403,36 +403,75 @@ func (cfg *apiConfig) handleCreateChirp() http.Handler {
 	}))
 }
 
-func (cfg *apiConfig) handleGetAllChirps() http.Handler {
-	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		type getAllChirpResponse struct {
-			ID uuid.UUID `json:"id"`
-			UserID uuid.UUID `json:"user_id"`
-			Body string `json:"body"`
-			CreatedAt time.Time `json:"created_at"`
-			UpdatedAt time.Time `json:"updated_at"`
+type getAllChirpResponse struct {
+	ID uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func mapChirpsToResponse(chirps []database.Chirp) []getAllChirpResponse {
+	data := make([]getAllChirpResponse, len(chirps))
+	for i, chirp := range chirps {
+		data[i] = getAllChirpResponse{
+			ID: chirp.ID,
+			UserID: chirp.UserID,
+			Body: chirp.Body,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
 		}
-		
-		chirps, err := cfg.DbQueries.GetAllChirps(r.Context())
+	}
+
+	return data
+}
+
+func (cfg *apiConfig) getChirpsAndRespond(w http.ResponseWriter, r *http.Request, authorID *uuid.UUID) {
+	var chirps = []database.Chirp{}
+	var err error
+
+	if authorID == nil {
+		chirps, err = cfg.DbQueries.GetAllChirps(r.Context())
 		if err != nil {
 			errorMessage := fmt.Sprintf("error getting all chirps: %v", err)
 
 			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 			return
 		}
+	} else {
+		chirps, err = cfg.DbQueries.GetAllChirpsByAuthorId(r.Context(), *authorID)
+		if err != nil {
+			errorMessage := fmt.Sprintf("error getting all chirps by author id: %v", err)
 
-		data := make([]getAllChirpResponse, len(chirps))
-		for i, chirp := range chirps {
-			data[i] = getAllChirpResponse{
-				ID: chirp.ID,
-				UserID: chirp.UserID,
-				Body: chirp.Body,
-				CreatedAt: chirp.CreatedAt,
-				UpdatedAt: chirp.UpdatedAt,
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+	}
+
+	data := mapChirpsToResponse(chirps)
+	respondWithJSON(w, http.StatusOK, data)
+}
+
+func (cfg *apiConfig) handleGetAllChirps() http.Handler {
+	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authorIdParam := r.URL.Query().Get("author_id")
+
+		var authorId *uuid.UUID
+
+		if authorIdParam != "" {
+			parsedAuthorId, err := safeParseUUID(authorIdParam)
+			
+			if err != nil {
+				errorMessage := fmt.Sprintf("invalid author_id: %v", err)
+
+				respondWithJSON(w, http.StatusBadRequest, errorMessage)
+				return
 			}
+
+			authorId = &parsedAuthorId
 		}
 
-		respondWithJSON(w, http.StatusOK, data)
+		cfg.getChirpsAndRespond(w, r, authorId)
 	}))
 }
 
