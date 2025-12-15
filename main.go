@@ -32,6 +32,7 @@ type apiConfig struct {
 	FileserverHits atomic.Int32
 	JWTSecret string
 	Platform string
+	PolkaWebhookSecret string
 	Port int
 }
 
@@ -822,6 +823,7 @@ type envVars struct {
 	DbUrl string
 	JWTSecret string
 	Platform string
+	PolkaWebhookSecret string
 	Port int
 }
 
@@ -850,6 +852,12 @@ func loadEnv() (envVars, error) {
 		return envVars{}, errorMessage
 	}
 
+	polkaWebhookSecret := os.Getenv("POLKA_KEY")
+	if polkaWebhookSecret == "" {
+		errorMessage := fmt.Errorf("POLKA_KEY is not set")
+		return envVars{}, errorMessage
+	}
+
 	port, err := getServerPort()
 	if err != nil {
 		fmt.Printf("error getting server port: %v\nfalling back to default port: %d\n", err, DEFAULT_PORT)
@@ -860,6 +868,7 @@ func loadEnv() (envVars, error) {
 		DbUrl: dbUrl,
 		JWTSecret: jwtSecret,
 		Platform: platform,
+		PolkaWebhookSecret: polkaWebhookSecret,
 		Port: port,
 	}, nil
 }
@@ -880,6 +889,7 @@ func main() {
 		FileserverHits: atomic.Int32{},
 		JWTSecret: envVars.JWTSecret,
 		Platform: envVars.Platform,
+		PolkaWebhookSecret: envVars.PolkaWebhookSecret,
 		Port: envVars.Port,
 	}
 
