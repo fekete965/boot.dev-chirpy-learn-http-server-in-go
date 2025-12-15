@@ -20,11 +20,12 @@ import (
 	"github.com/lib/pq"
 )
 
-const DEFAULT_PORT = 8080
-const STATIC_DIR = "./static"
-const STATIC_ASSETS_DIR = STATIC_DIR + "/assets"
-var DEFAULT_EXPIRES_IN = time.Hour
-var REFRESH_TOKEN_EXPIRES_IN = 60 * 24 * time.Hour
+const DEFAULT_PORT int = 8080
+const STATIC_DIR string = "./static"
+const STATIC_ASSETS_DIR string = STATIC_DIR + "/assets"
+var DEFAULT_SORT string = "asc"
+var DEFAULT_EXPIRES_IN time.Duration = time.Hour
+var REFRESH_TOKEN_EXPIRES_IN time.Duration = 60 * 24 * time.Hour
 var PROFANE_WORDS []string = []string{"kerfuffle", "sharbert", "fornax"}
 
 type apiConfig struct {
@@ -426,37 +427,22 @@ func mapChirpsToResponse(chirps []database.Chirp) []getAllChirpResponse {
 	return data
 }
 
-func (cfg *apiConfig) getChirpsAndRespond(w http.ResponseWriter, r *http.Request, authorID *uuid.UUID) {
-	var chirps = []database.Chirp{}
-	var err error
 
-	if authorID == nil {
-		chirps, err = cfg.DbQueries.GetAllChirps(r.Context())
-		if err != nil {
-			errorMessage := fmt.Sprintf("error getting all chirps: %v", err)
-
-			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
-			return
-		}
-	} else {
-		chirps, err = cfg.DbQueries.GetAllChirpsByAuthorId(r.Context(), *authorID)
-		if err != nil {
-			errorMessage := fmt.Sprintf("error getting all chirps by author id: %v", err)
-
-			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
-			return
-		}
+func getQueryParam(r *http.Request, paramName string, defaultValue *string) *string {
+	param := r.URL.Query().Get(paramName)
+	if param == "" {
+		return defaultValue
 	}
 
-	data := mapChirpsToResponse(chirps)
-	respondWithJSON(w, http.StatusOK, data)
+	return &param
 }
 
 func (cfg *apiConfig) handleGetAllChirps() http.Handler {
 	return middlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorIdParam := r.URL.Query().Get("author_id")
+		sortParam := getQueryParam(r, "sort", &DEFAULT_SORT)
 
-		var authorId *uuid.UUID
+		var authorID *uuid.UUID
 
 		if authorIdParam != "" {
 			parsedAuthorId, err := safeParseUUID(authorIdParam)
@@ -468,10 +454,22 @@ func (cfg *apiConfig) handleGetAllChirps() http.Handler {
 				return
 			}
 
-			authorId = &parsedAuthorId
+			authorID = &parsedAuthorId
 		}
 
-		cfg.getChirpsAndRespond(w, r, authorId)
+		chirps, err := cfg.DbQueries.GetAllChirps(r.Context(), database.GetAllChirpsParams{
+			AuthorID: authorID,
+			Sort: sortParam,
+		})
+		if err != nil {
+			errorMessage := fmt.Sprintf("error getting all chirps: %v", err)
+	
+			respondWithPlainText(w, http.StatusInternalServerError, errorMessage)
+			return
+		}
+	
+		data := mapChirpsToResponse(chirps)
+		respondWithJSON(w, http.StatusOK, data)
 	}))
 }
 
