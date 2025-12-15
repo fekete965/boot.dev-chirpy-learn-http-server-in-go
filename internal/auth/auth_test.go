@@ -192,3 +192,53 @@ func TestMakeRefreshToken(t *testing.T) {
 		t.Errorf("MakeRefreshToken() returned the same refresh token after the first call: %v", secondRefreshToken)
 	}
 }
+
+func TestGetAPIKey(t *testing.T) {
+	testToken := "test_api_key"
+
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+
+	request.Header.Set("Authorization", "ApiKey " + testToken)
+
+	bearerToken, err := GetAPIKey(request)
+	if err != nil {
+		t.Errorf("GetAPIKey(...) returned an error: %v", err)
+	}
+
+	if bearerToken != testToken {
+		t.Errorf("GetAPIKey(...) returned %v instead of %v", bearerToken, testToken)
+	}
+}
+
+func TestGetAPIKeyWithoutAuthorizationHeader(t *testing.T) {
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+	
+	// Request is missing the Authorization header
+	_, err = GetAPIKey(request)
+	if err == nil {
+		t.Error("GetAPIKey(...) should have returned and error stating that no authorization header was provided")
+	}
+}
+
+func TestGetAPIKeyWithInvalidAuthorizationHeaderFormat(t *testing.T) {
+	testToken := "test_api_key"
+
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
+	}
+
+	// Add Authorization header without the correct prefix
+	request.Header.Set("Authorization", testToken)
+
+	_, err = GetAPIKey(request)
+	if err == nil {
+		t.Error("GetAPIKey(...) should have returned and error stating that the authorization header format is invalid")
+	}
+}

@@ -86,3 +86,19 @@ func MakeRefreshToken() (string, error) {
 	refreshToken := hex.EncodeToString(randomBytes)
 	return refreshToken, nil
 }
+
+
+const POLKA_WEBHOOK_TOKEN_PREFIX = "ApiKey "
+func GetAPIKey(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return "", fmt.Errorf("no authorization header provided")
+	}
+
+	if !strings.HasPrefix(token, POLKA_WEBHOOK_TOKEN_PREFIX) {
+		return "", fmt.Errorf("invalid authorization header format")
+	}
+
+	trimmedToken := strings.TrimPrefix(token, POLKA_WEBHOOK_TOKEN_PREFIX)
+	return trimmedToken, nil
+}
