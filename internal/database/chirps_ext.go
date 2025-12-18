@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/constants"
 	"github.com/google/uuid"
 )
 
@@ -12,7 +13,6 @@ type GetAllChirpsParams struct {
 	Sort *string
 }
 
-var DEFAULT_SORT string = "asc"
 func getSortQuery(sort *string, defaultSort *string) string {
 	sortValue := sort
 
@@ -41,7 +41,7 @@ func (q *Queries) GetAllChirps(ctx context.Context, arg GetAllChirpsParams) ([]C
 		args = append(args, *arg.AuthorID)
 	}
 
-	sortQuery := getSortQuery(arg.Sort, &DEFAULT_SORT)
+	sortQuery := getSortQuery(arg.Sort, &constants.DEFAULT_SORT)
 	querySegments = append(querySegments, sortQuery)
 
 	rows, err := q.db.QueryContext(ctx, strings.Join(querySegments, " "), args...)

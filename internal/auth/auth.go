@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/constants"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
@@ -61,18 +62,17 @@ func ValidateJWT(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	return userID, nil
 }
 
-const BEARER_TOKEN_PREFIX = "Bearer "
 func GetBearerToken(r *http.Request) (string, error) {
-	token := r.Header.Get("Authorization")
+	token := r.Header.Get(constants.AUTHORIZATION_HEADER)
 	if token == "" {
 		return "", fmt.Errorf("no authorization header provided")
 	}
 	
-	if !strings.HasPrefix(token, BEARER_TOKEN_PREFIX) {
+	if !strings.HasPrefix(token, constants.BEARER_TOKEN_PREFIX) {
 		return "", fmt.Errorf("invalid authorization header format")
 	}
 
-	trimmedToken := strings.TrimPrefix(token, BEARER_TOKEN_PREFIX)
+	trimmedToken := strings.TrimPrefix(token, constants.BEARER_TOKEN_PREFIX)
 	return trimmedToken, nil
 }
 
@@ -88,17 +88,16 @@ func MakeRefreshToken() (string, error) {
 }
 
 
-const POLKA_WEBHOOK_TOKEN_PREFIX = "ApiKey "
 func GetAPIKey(r *http.Request) (string, error) {
-	token := r.Header.Get("Authorization")
+	token := r.Header.Get(constants.AUTHORIZATION_HEADER)
 	if token == "" {
 		return "", fmt.Errorf("no authorization header provided")
 	}
 
-	if !strings.HasPrefix(token, POLKA_WEBHOOK_TOKEN_PREFIX) {
+	if !strings.HasPrefix(token, constants.POLKA_WEBHOOK_TOKEN_PREFIX) {
 		return "", fmt.Errorf("invalid authorization header format")
 	}
 
-	trimmedToken := strings.TrimPrefix(token, POLKA_WEBHOOK_TOKEN_PREFIX)
+	trimmedToken := strings.TrimPrefix(token, constants.POLKA_WEBHOOK_TOKEN_PREFIX)
 	return trimmedToken, nil
 }
