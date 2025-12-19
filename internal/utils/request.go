@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 )
 
@@ -32,3 +33,13 @@ func DecodeRequestBody[T any](r *http.Request) (T, error) {
 
 	return data, nil
 }
+
+func GetBearerToken(r *http.Request) (string, error) {
+	bearerToken, err := auth.GetBearerToken(r)
+	if err != nil {
+		return "", service_errors.NewUnauthorizedError("error during token retrieval")
+	}
+
+	return bearerToken, nil
+}
+
