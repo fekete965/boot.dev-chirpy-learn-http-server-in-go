@@ -16,11 +16,11 @@ import (
 
 
 type userService struct {
-	db *database.Queries
+	Db *database.Queries
 }
 
-func NewUserService(db *database.Queries) *userService {
-	return &userService{db: db}
+func NewUserService(Db *database.Queries) *userService {
+	return &userService{Db: Db}
 }
 
 func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (User, error) {
@@ -32,7 +32,7 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 	}
 
 	now := time.Now()
-	newUser, err := s.db.CreateUser(ctx, database.CreateUserParams{
+	newUser, err := s.Db.CreateUser(ctx, database.CreateUserParams{
 		ID: uuid.New(),
 		Email: input.Email,
 		HashedPassword: hashedPassword,
@@ -65,7 +65,7 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 }
 
 func (s *userService) DeleteAllUsers(ctx context.Context) error {
-	err := s.db.DeleteAllUsers(ctx)
+	err := s.Db.DeleteAllUsers(ctx)
 	if err != nil {
 		errorMessage := "failed to delete all users"
 		log.Printf("%s: %v", errorMessage, err)
@@ -76,7 +76,7 @@ func (s *userService) DeleteAllUsers(ctx context.Context) error {
 }
 
 func (s *userService) FindUserByEmail(ctx context.Context, input FindUserByEmailInput) (User, error) {
-	user, err := s.db.FindUserByEmail(ctx, input.Email)
+	user, err := s.Db.FindUserByEmail(ctx, input.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 
@@ -102,7 +102,7 @@ func (s *userService) FindUserByEmail(ctx context.Context, input FindUserByEmail
 }
 
 func (s *userService) FindUserByID(ctx context.Context, input FindUserByIDInput) (User, error) {
-	user, err := s.db.FindUserById(ctx, input.UserID)
+	user, err := s.Db.FindUserById(ctx, input.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 
@@ -136,7 +136,7 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 		return User{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
-	updatedUser, err := s.db.UpdateUser(ctx, database.UpdateUserParams{
+	updatedUser, err := s.Db.UpdateUser(ctx, database.UpdateUserParams{
 		ID: input.UserID,
 		Email: input.Email,
 		HashedPassword: hashedPassword,
@@ -158,7 +158,7 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 }
 
 func (s *userService) UpdateUserIsChirpyRed(ctx context.Context, input UpdateUserIsChirpyRedInput) (User, error) {
-	updatedUser, err := s.db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
+	updatedUser, err := s.Db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
 		ID: input.UserID,
 		IsChirpyRed: input.IsChirpyRed,
 		UpdatedAt: input.UpdatedAt,

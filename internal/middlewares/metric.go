@@ -7,8 +7,8 @@ import (
 
 func (h *Middlewares) MiddlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.cfg.FileserverHits.Add(1)
-		next.ServeHTTP(w, r)
+		h.Cfg.FileserverHits.Add(1)
+		next.ServeHTTP(w, r)	
 	})
 }
 
@@ -21,7 +21,7 @@ func (h *Middlewares) MiddlewareHandleMetrics() http.Handler {
 					<p>Chirpy has been visited %d times!</p>
 				</body>
 			</html>`,
-			h.cfg.FileserverHits.Load())
+			h.Cfg.FileserverHits.Load())
 	
 		w.Header().Add("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)

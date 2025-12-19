@@ -35,17 +35,17 @@ func main() {
 	}
 
 	newServices := services.NewServices(services.NewServicesInput{
-		cfg: cfg,
-		db: database.New(dbConnection),
+		Cfg: cfg,
+		Db: database.New(dbConnection),
 	})
 
 	routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-		cfg: cfg,
-		services: newServices,
+		Cfg: cfg,
+		Services: newServices,
 	})
 
 	apiMiddlewares := middlewares.NewMiddlewares(middlewares.NewMiddlewaresInput{
-		cfg: cfg,
+		Cfg: cfg,
 	})
 
 	mux := http.NewServeMux()

@@ -18,7 +18,7 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 			return
 		}
 
-		newUser, err := h.services.UserService.CreateUser(r.Context(), services.CreateUserInput{
+		newUser, err := h.Services.UserService.CreateUser(r.Context(), services.CreateUserInput{
 			Email: payload.Email,
 			Password: payload.Password,
 		})
@@ -42,7 +42,7 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 
 func (h *Handlers) HandleUpdateUser() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, _, err := utils.GetAuthenticatedUserID(r, h.cfg.JWTSecret)
+		userID, _, err := utils.GetAuthenticatedUserID(r, h.Cfg.JWTSecret)
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
@@ -56,7 +56,7 @@ func (h *Handlers) HandleUpdateUser() http.Handler {
 			return
 		}
 
-		updatedUser, err := h.services.UserService.UpdateUser(r.Context(), services.UpdateUserInput{
+		updatedUser, err := h.Services.UserService.UpdateUser(r.Context(), services.UpdateUserInput{
 			UserID: userID,
 			Email: payload.Email,
 			Password: payload.Password,

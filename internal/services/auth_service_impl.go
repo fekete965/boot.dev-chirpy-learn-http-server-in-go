@@ -16,27 +16,27 @@ import (
 
 
 type authService struct {
-	cfg *config.ApiConfig
-	db *database.Queries
-	userService UserService
+	Cfg *config.ApiConfig
+	Db *database.Queries
+	UserService UserService
 }
 
 type NewAuthServiceInput struct {
-	cfg *config.ApiConfig
-	db *database.Queries
-	userService UserService
+	Cfg *config.ApiConfig
+	Db *database.Queries
+	UserService UserService
 }
 
 func NewAuthService(input NewAuthServiceInput) *authService {
 	return &authService{
-		cfg: input.cfg,
-		db: input.db,
-		userService: input.userService,
+		Cfg: input.Cfg,
+		Db: input.Db,
+		UserService: input.UserService,
 	}
 }
 
 func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error)  {
-	user, err := s.userService.FindUserByEmail(ctx, FindUserByEmailInput{Email: input.Email})
+	user, err := s.UserService.FindUserByEmail(ctx, FindUserByEmailInput{Email: input.Email})
 	if err != nil {
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
@@ -56,7 +56,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 			return LoginOutput{}, service_errors.NewUnauthorizedError(errorMessage)
 		}
 	
-	token, err := auth.MakeJWT(user.ID, s.cfg.JWTSecret, constants.DEFAULT_EXPIRES_IN)
+	token, err := auth.MakeJWT(user.ID, s.Cfg.JWTSecret, constants.DEFAULT_EXPIRES_IN)
 	if err != nil {
 		errorMessage := "error generating access token"
 		log.Printf("%s: %v", errorMessage, err)
@@ -72,7 +72,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 
 	now := time.Now()
 	expiresAt := now.Add(constants.REFRESH_TOKEN_EXPIRES_IN)
-	refreshToken, err := s.db.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
+	refreshToken, err := s.Db.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
 		Token: refreshTokenValue,
 		UserID: user.ID,
 		ExpiresAt: expiresAt,
@@ -98,7 +98,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 }
 
 func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput) (string, error) {
-	refreshToken, err := s.db.FindRefreshToken(ctx, input.RefreshToken)
+	refreshToken, err := s.Db.FindRefreshToken(ctx, input.RefreshToken)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			errorMessage := "refresh token not found"
@@ -123,7 +123,7 @@ func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput)
 		return "", service_errors.NewUnauthorizedError(errorMessage)
 	}
 
-	newAccessToken, err := auth.MakeJWT(refreshToken.UserID, s.cfg.JWTSecret, constants.DEFAULT_EXPIRES_IN)
+	newAccessToken, err := auth.MakeJWT(refreshToken.UserID, s.Cfg.JWTSecret, constants.DEFAULT_EXPIRES_IN)
 	if err != nil {
 		errorMessage := "error generating access token"
 		log.Printf("%s: %v", errorMessage, err)
@@ -135,7 +135,7 @@ func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput)
 
 func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) error {
 	now := time.Now()
-	err := s.db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
+	err := s.Db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
 		Token: input.RefreshToken,
 		RevokedAt: sql.NullTime{Time: now, Valid: true},
 		UpdatedAt: now,
@@ -150,14 +150,14 @@ func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) e
 }
 
 func (s *authService) UpgradeUser(ctx context.Context, input UpgradeUserInput) error {
-	user, err := s.userService.FindUserByID(ctx, FindUserByIDInput(input))
+	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput(input))
 	if err != nil {
 		errorMessage := "error finding user"
 		log.Printf("%s: %v", errorMessage, err)
 		return service_errors.NewInternalServerError(errorMessage)
 	}
 
-	_, err = s.db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
+	_, err = s.Db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
 		ID: user.ID,
 		IsChirpyRed: true,
 		UpdatedAt: time.Now(),

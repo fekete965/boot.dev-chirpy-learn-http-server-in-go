@@ -6,18 +6,18 @@ import (
 )
 
 type Handlers struct {
-	cfg *config.ApiConfig
-	services *services.Services
+	Cfg *config.ApiConfig
+	Services *services.Services
 }
 
 type NewHandlersInput struct {
-	cfg *config.ApiConfig
-	services *services.Services
+	Cfg *config.ApiConfig
+	Services *services.Services
 }
 
 func NewHandlers(input NewHandlersInput) *Handlers {
 	return &Handlers{
-		cfg: input.cfg,
-		services: input.services,
+		Cfg: input.Cfg,
+		Services: input.Services,
 	}
 }

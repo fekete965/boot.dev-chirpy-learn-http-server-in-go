@@ -19,7 +19,7 @@ func (h *Handlers) HandleLogin() http.Handler {
 		}
 		
 
-		loginOutput, err := h.services.AuthService.Login(r.Context(), services.LoginInput{
+		loginOutput, err := h.Services.AuthService.Login(r.Context(), services.LoginInput{
 			Email: payload.Email,
 			Password: payload.Password,
 		})
@@ -52,7 +52,7 @@ func (h *Handlers) HandleTokenRefresh() http.Handler {
 			return
 		}
 
-		newAccessToken, err := h.services.AuthService.RefreshToken(r.Context(), services.RefreshTokenInput{
+			newAccessToken, err := h.Services.AuthService.RefreshToken(r.Context(), services.RefreshTokenInput{
 			RefreshToken: token,
 		})
 		if err != nil {
@@ -78,7 +78,7 @@ func (h *Handlers) HandleTokenRevoke() http.Handler {
 			return
 		}
 
-		err = h.services.AuthService.RevokeToken(r.Context(), services.RevokeTokenInput{
+		err = h.Services.AuthService.RevokeToken(r.Context(), services.RevokeTokenInput{
 			RefreshToken: token,
 		})
 		if err != nil {

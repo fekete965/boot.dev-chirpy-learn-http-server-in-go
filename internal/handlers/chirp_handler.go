@@ -14,7 +14,7 @@ import (
 
 func (h *Handlers) HandleCreateChirp() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, _, err := utils.GetAuthenticatedUserID(r, h.cfg.JWTSecret)
+		userID, _, err := utils.GetAuthenticatedUserID(r, h.Cfg.JWTSecret)
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
@@ -28,7 +28,7 @@ func (h *Handlers) HandleCreateChirp() http.Handler {
 			return
 		}
 
-		newChirp, err := h.services.ChirpService.CreateChirp(r.Context(), services.CreateChirpInput{
+		newChirp, err := h.Services.ChirpService.CreateChirp(r.Context(), services.CreateChirpInput{
 			UserID: userID,
 			Body: payload.Body,
 		})
@@ -69,7 +69,7 @@ func (h *Handlers) HandleGetAllChirps() http.Handler {
 			authorID = &parsedAuthorId
 		}
 
-		chirps, err := h.services.ChirpService.GetAllChirps(r.Context(), services.GetAllChirpsInput{
+		chirps, err := h.Services.ChirpService.GetAllChirps(r.Context(), services.GetAllChirpsInput{
 			UserID: authorID,
 			Sort: sortParam,
 		})
@@ -103,7 +103,7 @@ func (h *Handlers) HandleGetChirpById() http.Handler {
 			return
 		}
 
-		chirp, err := h.services.ChirpService.GetChirpByID(r.Context(), services.GetChirpByIDInput{
+		chirp, err := h.Services.ChirpService.GetChirpByID(r.Context(), services.GetChirpByIDInput{
 			ChirpID: chirpID,
 		})
 		if err != nil {
@@ -126,7 +126,7 @@ func (h *Handlers) HandleGetChirpById() http.Handler {
 
 func (h *Handlers) HandleDeleteChirp() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, _, err := utils.GetAuthenticatedUserID(r, h.cfg.JWTSecret)
+		userID, _, err := utils.GetAuthenticatedUserID(r, h.Cfg.JWTSecret)
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
@@ -140,7 +140,7 @@ func (h *Handlers) HandleDeleteChirp() http.Handler {
 			return
 		}
 
-		err = h.services.ChirpService.DeleteChirp(r.Context(), services.DeleteChirpInput{
+		err = h.Services.ChirpService.DeleteChirp(r.Context(), services.DeleteChirpInput{
 			UserID: userID,
 			ChirpID: chirpID,
 		})

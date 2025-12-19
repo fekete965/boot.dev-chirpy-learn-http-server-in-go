@@ -16,22 +16,22 @@ import (
 )
 
 type NewChirpServiceInput struct {
-	cfg *config.ApiConfig
-	db *database.Queries
-	userService UserService
+	Cfg *config.ApiConfig
+	Db *database.Queries
+	UserService UserService
 }
 
 type chirpService struct {
-	cfg *config.ApiConfig
-	db *database.Queries
-	userService UserService
+	Cfg *config.ApiConfig
+	Db *database.Queries
+	UserService UserService
 }
 
 func NewChirpService(input NewChirpServiceInput) *chirpService {
 	return &chirpService{
-		cfg: input.cfg,
-		db: input.db,
-		userService: input.userService,
+		Cfg: input.Cfg,
+		Db: input.Db,
+		UserService: input.UserService,
 	}
 }
 
@@ -43,7 +43,7 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 		return Chirp{}, service_errors.NewBadRequestError(errorMessage)
 	}
 
-	user, err := s.userService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
+	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
 	if err != nil {
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
@@ -53,7 +53,7 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 
 	cleanedBody := utils.CleanChirp(input.Body, constants.PROFANE_WORDS)
 
-	newChirp, err := s.db.CreateChirp(ctx, database.CreateChirpParams{
+	newChirp, err := s.Db.CreateChirp(ctx, database.CreateChirpParams{
 		ID: uuid.New(),
 		UserID: user.ID,
 		Body: cleanedBody,
@@ -77,7 +77,7 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 }
 
 func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) error {
-	user, err := s.userService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
+	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
 	if err != nil {
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
@@ -97,7 +97,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 		return service_errors.NewForbiddenError(errorMessage)
 	}
 
-	err = s.db.DeleteChirp(ctx, database.DeleteChirpParams{
+	err = s.Db.DeleteChirp(ctx, database.DeleteChirpParams{
 		ID: chirp.ID,
 		UserID: user.ID,
 	})
@@ -111,7 +111,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 }
 
 func (s *chirpService) GetAllChirps(ctx context.Context, input GetAllChirpsInput) ([]Chirp, error) {
-	chirps, err := s.db.GetAllChirps(ctx, database.GetAllChirpsParams{
+	chirps, err := s.Db.GetAllChirps(ctx, database.GetAllChirpsParams{
 		AuthorID: input.UserID,
 		Sort: input.Sort,
 	})
@@ -136,7 +136,7 @@ func (s *chirpService) GetAllChirps(ctx context.Context, input GetAllChirpsInput
 }
 
 func (s *chirpService) GetChirpByID(ctx context.Context, input GetChirpByIDInput) (Chirp, error) {
-	chirp, err := s.db.GetChirpById(ctx, input.ChirpID)
+	chirp, err := s.Db.GetChirpById(ctx, input.ChirpID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			errorMessage := "chirp not found"

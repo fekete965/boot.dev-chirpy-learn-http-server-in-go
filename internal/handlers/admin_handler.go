@@ -14,16 +14,16 @@ import (
 func (h *Handlers) HandleReset() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if h.cfg.Platform != "dev" {
+		if h.Cfg.Platform != "dev" {
 			utils.RespondWithPlainText(w, http.StatusForbidden, "Forbidden operation")
 			return
 		}
 
 		// Reset the metrics
-		h.cfg.FileserverHits.Store(0)
+		h.Cfg.FileserverHits.Store(0)
 
 		// Reset the database
-		err := h.services.UserService.DeleteAllUsers(r.Context())
+		err := h.Services.UserService.DeleteAllUsers(r.Context())
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
@@ -45,7 +45,7 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			return
 		}
 
-		if apiKey != h.cfg.PolkaWebhookSecret {
+		if apiKey != h.Cfg.PolkaWebhookSecret {
 			errorMessage := "invalid api key"
 			utils.RespondWithPlainText(w, http.StatusUnauthorized, errorMessage)
 			return
@@ -63,7 +63,7 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			return
 		}
 
-		user, err := h.services.UserService.FindUserByID(r.Context(), services.FindUserByIDInput{
+		user, err := h.Services.UserService.FindUserByID(r.Context(), services.FindUserByIDInput{
 			UserID: payload.Data.UserID,
 		})
 		if err != nil {
@@ -72,7 +72,7 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			return
 		}
 
-		_, err = h.services.UserService.UpdateUserIsChirpyRed(r.Context(), services.UpdateUserIsChirpyRedInput{
+		_, err = h.Services.UserService.UpdateUserIsChirpyRed(r.Context(), services.UpdateUserIsChirpyRedInput{
 			UserID: user.ID,
 			IsChirpyRed: true,
 			UpdatedAt: time.Now(),

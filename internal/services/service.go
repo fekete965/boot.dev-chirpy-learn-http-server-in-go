@@ -13,21 +13,21 @@ type Services struct {
 }
 
 type NewServicesInput struct {
-	cfg *config.ApiConfig
-	db *database.Queries
+	Cfg *config.ApiConfig
+	Db *database.Queries
 }
 
 func NewServices(input NewServicesInput) *Services {
-	userService := NewUserService(input.db)
+	userService := NewUserService(input.Db)
 	chirpService := NewChirpService(NewChirpServiceInput{
-		cfg: input.cfg,
-		db: input.db,
-		userService: userService,
+		Cfg: input.Cfg,
+		Db: input.Db,
+		UserService: userService,
 	})
 	authService := NewAuthService(NewAuthServiceInput{
-		cfg: input.cfg,
-		db: input.db,
-		userService: userService,
+		Cfg: input.Cfg,
+		Db: input.Db,
+		UserService: userService,
 	})
 
 	return &Services{
