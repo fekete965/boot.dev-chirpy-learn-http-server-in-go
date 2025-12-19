@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/middlewares"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/models"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/services"
@@ -47,15 +45,15 @@ func (h *Handlers) HandleLogin() http.Handler {
 
 func (h *Handlers) HandleTokenRefresh() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		refreshTokenString, err := auth.GetBearerToken(r)
+		token, err := utils.GetBearerToken(r)
 		if err != nil {
-			errorMessage := fmt.Sprintf("error during authentication: %v", err)
-			utils.RespondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
+			utils.RespondWithPlainText(w, statusCode, errorMessage)
 			return
 		}
 
 		newAccessToken, err := h.services.AuthService.RefreshToken(r.Context(), services.RefreshTokenInput{
-			RefreshToken: refreshTokenString,
+			RefreshToken: token,
 		})
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
@@ -73,15 +71,15 @@ func (h *Handlers) HandleTokenRefresh() http.Handler {
 
 func (h *Handlers) HandleTokenRevoke() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		refreshTokenString, err := auth.GetBearerToken(r)
+		token, err := utils.GetBearerToken(r)
 		if err != nil {
-			errorMessage := fmt.Sprintf("error during authentication: %v", err)
-			utils.RespondWithPlainText(w, http.StatusBadRequest, errorMessage)
+			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
+			utils.RespondWithPlainText(w, statusCode, errorMessage)
 			return
 		}
 
 		err = h.services.AuthService.RevokeToken(r.Context(), services.RevokeTokenInput{
-			RefreshToken: refreshTokenString,
+			RefreshToken: token,
 		})
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)

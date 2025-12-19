@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/middlewares"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/models"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/services"
@@ -44,20 +42,12 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 
 func (h *Handlers) HandleUpdateUser() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accessToken, err := auth.GetBearerToken(r)
+		userID, _, err := utils.GetAuthenticatedUserID(r, h.cfg.JWTSecret)
 		if err != nil {
-			errorMessage := fmt.Sprintf("error during authentication: %v", err)
-			utils.RespondWithPlainText(w, http.StatusUnauthorized, errorMessage)
+			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
+			utils.RespondWithPlainText(w, statusCode, errorMessage)
 			return
 		}
-
-		userID, err := auth.ValidateJWT(accessToken, h.cfg.JWTSecret)
-		if err != nil {
-			errorMessage := fmt.Sprintf("error validating token: %v", err)
-			utils.RespondWithPlainText(w, http.StatusUnauthorized, errorMessage)
-			return
-		}
-
 
 		payload, err := utils.DecodeRequestBody[models.UpdateUserResource](r)
 		if err != nil {
