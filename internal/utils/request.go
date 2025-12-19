@@ -7,6 +7,7 @@ import (
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
+	"github.com/google/uuid"
 )
 
 func GetQueryParam(r *http.Request, paramName string, defaultValue *string) *string {
@@ -43,3 +44,16 @@ func GetBearerToken(r *http.Request) (string, error) {
 	return bearerToken, nil
 }
 
+func GetAuthenticatedUserID(r *http.Request, jwtSecret string) (userID uuid.UUID, token string, err error) {
+	bearerToken, err := GetBearerToken(r)
+	if err != nil {
+		return uuid.UUID{}, "", service_errors.NewUnauthorizedError("error during token retrieval")
+	}
+	
+	userID, err = auth.ValidateJWT(bearerToken, jwtSecret)
+	if err != nil {
+		return uuid.UUID{}, "", service_errors.NewUnauthorizedError("error during validation")
+	}
+
+	return userID, bearerToken, nil
+}
