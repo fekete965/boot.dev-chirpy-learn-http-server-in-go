@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync/atomic"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/constants"
@@ -42,28 +43,26 @@ func LoadEnv() (models.EnvVars, error) {
 		return models.EnvVars{}, errorMessage
 	}
 
+	missingEnvVariables := make([]string, 0)
+
 	dbUrl := os.Getenv("DB_URL")
 	if dbUrl == "" {
-		errorMessage := fmt.Errorf("DB_URL is not set")
-		return models.EnvVars{}, errorMessage
+		missingEnvVariables = append(missingEnvVariables, "DB_URL")
 	}
 
 	platform := os.Getenv("PLATFORM")
 	if platform == "" {
-		errorMessage := fmt.Errorf("PLATFORM is not set")
-		return models.EnvVars{}, errorMessage
+		missingEnvVariables = append(missingEnvVariables, "PLATFORM")
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		errorMessage := fmt.Errorf("JWT_SECRET is not set")
-		return models.EnvVars{}, errorMessage
+		missingEnvVariables = append(missingEnvVariables, "JWT_SECRET")
 	}
 
 	polkaWebhookSecret := os.Getenv("POLKA_KEY")
 	if polkaWebhookSecret == "" {
-		errorMessage := fmt.Errorf("POLKA_KEY is not set")
-		return models.EnvVars{}, errorMessage
+		missingEnvVariables = append(missingEnvVariables, "POLKA_KEY")
 	}
 
 	port, err := getServerPort()
@@ -72,6 +71,11 @@ func LoadEnv() (models.EnvVars, error) {
 		port = constants.DEFAULT_PORT
 	}
 
+	if len(missingEnvVariables) > 0 {
+		errorMessage := fmt.Errorf("missing environment variables: %v", strings.Join(missingEnvVariables, ", "))
+		return models.EnvVars{}, errorMessage
+	}
+	
 	return models.EnvVars{
 		DbUrl: dbUrl,
 		JWTSecret: jwtSecret,
