@@ -1,17 +1,26 @@
 package utils
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 )
 
 func ServiceErrorToRequestError(err error) (statusCode int, errorMessage string, ) {
-	var serviceErr *service_errors.ServiceError
-	if errors.As(err, &serviceErr) {
-		return serviceErr.Code, serviceErr.Message
+	switch e := err.(type) {
+		case *service_errors.BadRequestError:
+			return e.Code, e.Message
+		case *service_errors.NotFoundError:
+			return e.Code, e.Message
+		case *service_errors.ConflictError:
+			return e.Code, e.Message
+		case *service_errors.UnauthorizedError:
+			return e.Code, e.Message
+		case *service_errors.ForbiddenError:
+			return e.Code, e.Message
+		case *service_errors.InternalServerError:
+			return e.Code, e.Message
+		default:
+			return http.StatusInternalServerError, err.Error()
 	}
-
-	return http.StatusInternalServerError, err.Error()
 }
