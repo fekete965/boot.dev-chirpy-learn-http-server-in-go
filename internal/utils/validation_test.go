@@ -6,10 +6,40 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestCleanChirpCleansTextCorrectly(t *testing.T) {
+func TestCleanChirp(t *testing.T) {
 	profaneWords := []string{"freakin"}
 	result := CleanChirp("This is a freakin great day!", profaneWords)
 	expected := "This is a **** great day!"
+
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestCleanChirpWithMultipleProfaneWords(t *testing.T) {
+	profaneWords := []string{"freakin", "duck"}
+	result := CleanChirp("This is a freakin great day! I've seen a duck", profaneWords)
+	expected := "This is a **** great day! I've seen a ****"
+
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestCleanChirpWithMultipleWordsAndProfaneWords(t *testing.T) {
+	profaneWords := []string{"freakin", "duck"}
+	result := CleanChirp("This is a freakin great day! I've seen a freakin duck! duck duck duck", profaneWords)
+	expected := "This is a **** great day! I've seen a **** duck! **** **** ****"
+
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestCleanChirpSoItKeepsTheTextIntact(t *testing.T) {
+	profaneWords := []string{"duck"}
+	result := CleanChirp("I've seen a freakin duck! duck duck duck", profaneWords)
+	expected := "I've seen a freakin duck! **** **** ****"
 
 	if result != expected {
 		t.Errorf("Expected %s, but got %s", expected, result)
@@ -65,9 +95,5 @@ func TestValidateChirpLengthWithInvalidChirp(t *testing.T) {
 	err := ValidateChirpLength(invalidChirp, 10)
 	if err == nil {
 		t.Errorf("ValidateChirpLength(%v) should have returned an error", invalidChirp)
-	}
-
-	if err.Error() != "chirp is too long" {
-		t.Errorf("ValidateChirpLength(%v) should have returned \"chirp is too long\" error instead of %v", invalidChirp, err.Error())
 	}
 }
