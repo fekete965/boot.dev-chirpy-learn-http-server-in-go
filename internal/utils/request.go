@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -38,7 +39,8 @@ func DecodeRequestBody[T any](r *http.Request) (T, error) {
 func GetBearerToken(r *http.Request) (string, error) {
 	bearerToken, err := auth.GetBearerToken(r)
 	if err != nil {
-		return "", service_errors.NewUnauthorizedError("error during token retrieval")
+		errorMessage := fmt.Sprintf("error during token retrieval: %v", err)
+		return "", service_errors.NewUnauthorizedError(errorMessage)
 	}
 
 	return bearerToken, nil
@@ -47,12 +49,14 @@ func GetBearerToken(r *http.Request) (string, error) {
 func GetAuthenticatedUserID(r *http.Request, jwtSecret string) (userID uuid.UUID, token string, err error) {
 	bearerToken, err := GetBearerToken(r)
 	if err != nil {
-		return uuid.UUID{}, "", service_errors.NewUnauthorizedError("error during token retrieval")
+		errorMessage := fmt.Sprintf("error during token retrieval: %v", err)
+		return uuid.UUID{}, "", service_errors.NewUnauthorizedError(errorMessage)
 	}
 	
 	userID, err = auth.ValidateJWT(bearerToken, jwtSecret)
 	if err != nil {
-		return uuid.UUID{}, "", service_errors.NewUnauthorizedError("error during validation")
+		errorMessage := fmt.Sprintf("error during validation: %v", err)
+		return uuid.UUID{}, "", service_errors.NewUnauthorizedError(errorMessage)
 	}
 
 	return userID, bearerToken, nil
