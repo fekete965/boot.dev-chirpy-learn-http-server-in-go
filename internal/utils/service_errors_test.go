@@ -24,16 +24,54 @@ func TestServiceErrorToRequestErrorWithGenericError(t *testing.T) {
 }
 
 func TestServiceErrorToRequestErrorWithServiceError(t *testing.T) {
-	serviceError := service_errors.NewNotFoundError("user cannot be found")
-	statusCode, errorMessage := ServiceErrorToRequestError(serviceError)
-
-	expectedStatusCode := http.StatusNotFound
-	if statusCode != expectedStatusCode {
-		t.Errorf("Expected %d status code, but received %d", expectedStatusCode, statusCode)
+	type testCases struct {
+		ServiceError error
+		ExpectedStatusCode int
+		ExpectedErrorMessage string
+	}
+	
+	tests := []testCases {
+		{
+			ServiceError: service_errors.NewNotFoundError("user cannot be found"),
+			ExpectedStatusCode: http.StatusNotFound,
+			ExpectedErrorMessage: "user cannot be found",
+		},
+		{
+			ServiceError: service_errors.NewConflictError("conflict error"),
+			ExpectedStatusCode: http.StatusConflict,
+			ExpectedErrorMessage: "conflict error",
+		},
+		{
+			ServiceError: service_errors.NewBadRequestError("bad request error"),
+			ExpectedStatusCode: http.StatusBadRequest,
+			ExpectedErrorMessage: "bad request error",
+		},
+		{
+			ServiceError: service_errors.NewUnauthorizedError("unauthorized error"),
+			ExpectedStatusCode: http.StatusUnauthorized,
+			ExpectedErrorMessage: "unauthorized error",
+		},
+		{
+			ServiceError: service_errors.NewForbiddenError("forbidden error"),
+			ExpectedStatusCode: http.StatusForbidden,
+			ExpectedErrorMessage: "forbidden error",
+		},
+		{
+			ServiceError: service_errors.NewInternalServerError("internal server error"),
+			ExpectedStatusCode: http.StatusInternalServerError,
+			ExpectedErrorMessage: "internal server error",
+		},
 	}
 
-	expectedErrorMessage := serviceError.Error()
-	if errorMessage != expectedErrorMessage {
-		t.Errorf("Expected %s error message, but received %s", expectedErrorMessage, errorMessage)
+	for _, test := range tests {
+		statusCode, errorMessage := ServiceErrorToRequestError(test.ServiceError)
+
+		if statusCode != test.ExpectedStatusCode {
+			t.Errorf("Expected %d status code, but received %d", test.ExpectedStatusCode, statusCode)
+		}
+	
+		if errorMessage != test.ExpectedErrorMessage {
+			t.Errorf("Expected %s error message, but received %s", test.ExpectedErrorMessage, errorMessage)
+		}
 	}
 }
