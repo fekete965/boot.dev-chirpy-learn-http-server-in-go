@@ -150,6 +150,6 @@ func (h *Handlers) HandleDeleteChirp() http.Handler {
 			return
 		}
 
-		utils.RespondNoContent(w)
+		utils.RespondWithNoContent(w)
 	}))
 }

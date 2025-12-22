@@ -87,6 +87,6 @@ func (h *Handlers) HandleTokenRevoke() http.Handler {
 			return
 		}
 
-		utils.RespondNoContent(w)
+		utils.RespondWithNoContent(w)
 	}))
 }

@@ -59,7 +59,7 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 		}
 
 		if payload.Event != "user.upgraded" {
-			utils.RespondNoContent(w)
+			utils.RespondWithNoContent(w)
 			return
 		}
 
@@ -83,6 +83,6 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			return
 		}
 
-		utils.RespondNoContent(w)
+		utils.RespondWithNoContent(w)
 	}))
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func RespondNoContent(w http.ResponseWriter) {
+func RespondWithNoContent(w http.ResponseWriter) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusNoContent)
 }
