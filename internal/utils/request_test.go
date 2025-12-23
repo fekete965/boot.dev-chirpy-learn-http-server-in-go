@@ -18,12 +18,14 @@ type testPayload struct {
 	Message string `json:"message"`
 }
 
-var testParamName string = "test"
-var testParamValue string = "test-value"
-var testDefaultParamValue string = "default-test-value"
-var testPayloadValue string = "Hello, there!"
-var testToken string = "test-token"
-var testJwtSecret string = "test-jwt-secret"
+var (
+	testParamName string = "test"
+	testParamValue string = "test-value"
+	testDefaultParamValue string = "default-test-value"
+	testPayloadValue string = "Hello, there!"
+	testToken string = "test-token"
+	testJwtSecret string = "test-jwt-secret"
+)
 
 func getTestPayload(t *testing.T) io.Reader {
 	testPayloadValue := testPayload{Message: testPayloadValue}

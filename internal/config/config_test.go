@@ -9,11 +9,13 @@ import (
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/constants"
 )
 
-var dbUrl string = "DB_URL=postgres://user:password@localhost/dbname?sslmode=disable"
-var platform string = "PLATFORM=dev"
-var polkaKey string = "POLKA_KEY=polka-webhook-secret"
-var jwtSecret string = "JWT_SECRET=jwt-secret"
-var port string = "PORT=3054"
+var (
+	dbUrl string = "DB_URL=postgres://user:password@localhost/dbname?sslmode=disable"
+	platform string = "PLATFORM=dev"
+	polkaKey string = "POLKA_KEY=polka-webhook-secret"
+	jwtSecret string = "JWT_SECRET=jwt-secret"
+	port string = "PORT=3054"
+)
 
 func clearEnvVars() {
 	os.Unsetenv("DB_URL")
