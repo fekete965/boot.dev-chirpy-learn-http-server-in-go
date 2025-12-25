@@ -91,6 +91,17 @@ func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (User, error) 
 	return i, err
 }
 
+const getUserCount = `-- name: GetUserCount :one
+SELECT COUNT(*) FROM users
+`
+
+func (q *Queries) GetUserCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getUserCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET email = $2, hashed_password = $3
