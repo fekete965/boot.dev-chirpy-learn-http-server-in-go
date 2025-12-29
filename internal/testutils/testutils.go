@@ -1,4 +1,4 @@
-package testdb
+package testutils
 
 import (
 	"context"
@@ -9,8 +9,42 @@ import (
 	"testing"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testdb"
 	"github.com/stretchr/testify/require"
 )
+
+type serviceTestHelper struct {
+	T *testing.T
+	Ctx context.Context
+	Db *sql.DB
+	Queries *database.Queries
+}
+
+func SetupServiceTest(t *testing.T) *serviceTestHelper {
+	ctx := context.Background()
+	migrationsDir := GetMigrationsDir(t)
+	db, err := testdb.SetupPostgres(ctx, migrationsDir)
+	require.NoError(t, err)
+
+	queries := database.New(db)
+
+	return &serviceTestHelper{
+		T: t,
+		Ctx: ctx,
+		Db: db,
+		Queries: queries,
+	}
+}
+
+func (h *serviceTestHelper) WithTx(fn func(*database.Queries) error) {
+	WithTx(h.T, h.Ctx, h.Db, fn)
+}
+
+func (h *serviceTestHelper) Cleanup() {
+	if h.Db != nil {
+		h.Db.Close()
+	}
+}
 
 func findProjectRoot() (string, error) {
 	dir, err := os.Getwd()
@@ -41,15 +75,17 @@ func GetMigrationsDir(t *testing.T) string {
 	return filepath.Join(cwd, "sql", "schema")
 }
 
+func rollbackTx(t *testing.T, tx *sql.Tx) {
+	if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		t.Logf("rollback error: %v", err)
+	}
+}
+
 func WithTx(t *testing.T, ctx context.Context, db *sql.DB, fn func(*database.Queries) error) {
 	tx, err := db.BeginTx(ctx, nil)
 	require.NoError(t, err)
 
-	defer func() {
-		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-			t.Logf("rollback error: %v", err)
-		}
-	}()
+	defer rollbackTx(t, tx)
 
 	q := database.New(tx)
 
