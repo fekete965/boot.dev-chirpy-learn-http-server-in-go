@@ -11,7 +11,7 @@ import (
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 
@@ -24,6 +24,19 @@ func NewUserService(Db *database.Queries) *userService {
 }
 
 func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (User, error) {
+	existingUser, err := s.Db.FindUserByEmail(ctx, input.Email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows){
+		errorMessage := "something went wrong while finding user by email"
+		log.Printf("%s: %v", errorMessage, err)
+		return User{}, service_errors.NewInternalServerError(errorMessage)
+	}
+
+	if existingUser.ID != uuid.Nil {
+		errorMessage := "email already exists"
+		log.Print(errorMessage)
+		return User{}, service_errors.NewConflictError(errorMessage)
+	}
+	
 	hashedPassword, err := auth.HashPassword(input.Password)
 	if err != nil {
 		errorMessage := "error hashing password"
@@ -41,14 +54,6 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 	})
 
 	if err != nil {
-		var pqErr *pq.Error
-
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
-			errorMessage := "email already exists"
-			log.Print(errorMessage)
-			return User{}, service_errors.NewConflictError(errorMessage)
-		}
-
 		errorMessage := "user signup failed"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
@@ -79,12 +84,10 @@ func (s *userService) FindUserByEmail(ctx context.Context, input FindUserByEmail
 	user, err := s.Db.FindUserByEmail(ctx, input.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-
 			errorMessage := "user not found"
 			log.Print(errorMessage)
 			return User{}, service_errors.NewNotFoundError(errorMessage)
 		}
-
 
 		errorMessage := "failed to find user by email"
 		log.Printf("%s: %v", errorMessage, err)
@@ -128,6 +131,19 @@ func (s *userService) FindUserByID(ctx context.Context, input FindUserByIDInput)
 }
 
 func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (User, error) {
+	userWithSameEmail, err := s.Db.FindUserByEmail(ctx, input.Email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		errorMessage := "something went wrong while finding user by email"
+		log.Printf("%s: %v", errorMessage, err)
+		return User{}, service_errors.NewInternalServerError(errorMessage)
+	}
+
+	if userWithSameEmail.ID != uuid.Nil {
+		errorMessage := "email already exists"
+		log.Print(errorMessage)
+		return User{}, service_errors.NewConflictError(errorMessage)
+	}
+
 	hashedPassword, err := auth.HashPassword(input.Password)
 	if err != nil {
 		errorMessage := "error hashing password"
@@ -142,6 +158,12 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 		HashedPassword: hashedPassword,
 	})
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errorMessage := "user not found"
+			log.Print(errorMessage)
+			return User{}, service_errors.NewNotFoundError(errorMessage)
+		}
+
 		errorMessage := "user update failed"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
@@ -164,6 +186,12 @@ func (s *userService) UpdateUserIsChirpyRed(ctx context.Context, input UpdateUse
 		UpdatedAt: input.UpdatedAt,
 	})
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errorMessage := "user not found"
+			log.Print(errorMessage)
+			return User{}, service_errors.NewNotFoundError(errorMessage)
+		}
+
 		errorMessage := "user update failed"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
