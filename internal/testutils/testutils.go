@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/config"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testdb"
 	"github.com/stretchr/testify/require"
@@ -91,4 +93,14 @@ func WithTx(t *testing.T, ctx context.Context, db *sql.DB, fn func(*database.Que
 
 	err = fn(q)
 	require.NoError(t, err)
+}
+
+func GetTestApiConfig() *config.ApiConfig {
+	return &config.ApiConfig{
+		FileserverHits: atomic.Int32{},
+		JWTSecret: "test-jwt-secret",
+		Platform: "test-platform",
+		PolkaWebhookSecret: "test-polka-webhook-secret",
+		Port: 3054,
+	}
 }

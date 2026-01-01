@@ -20,7 +20,6 @@ type ApiConfig struct {
 	Port int
 }
 
-
 func getServerPort() (int, error) {
 	portEnv := os.Getenv("PORT")
 
