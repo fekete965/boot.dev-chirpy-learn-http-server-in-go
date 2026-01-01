@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestUserService_CreateUser(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
@@ -38,7 +37,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	})
 }
 
-func TestUserService_CreateUser_Returns_ConflictError_WhenEmailAlreadyExists(t *testing.T) {
+func TestUserService_CreateUser_Returns_ConflictError_When_EmailAlreadyExists(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -289,7 +288,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 	})
 }
 
-func TestUserService_UpdateUser_Returns_Conflict_WhenEmailAlreadyExists(t *testing.T) {
+func TestUserService_UpdateUser_Returns_ConflictError_When_EmailAlreadyExists(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -326,7 +325,7 @@ func TestUserService_UpdateUser_Returns_Conflict_WhenEmailAlreadyExists(t *testi
 	})
 }
 
-func TestUserService_UpdateUser_Returns_NotFound_WhenUserDoesNotExist(t *testing.T) {
+func TestUserService_UpdateUser_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -376,7 +375,7 @@ func TestUserService_UpdateUserIsChirpyRed(t *testing.T) {
 	})
 }
 
-func TestUserService_UpdateUserIsChirpyRed_Returns_NotFound_WhenUserDoesNotExist(t *testing.T) {
+func TestUserService_UpdateUserIsChirpyRed_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
