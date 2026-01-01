@@ -75,3 +75,14 @@ func (q *Queries) GetChirpById(ctx context.Context, id uuid.UUID) (Chirp, error)
 	)
 	return i, err
 }
+
+const getChirpCount = `-- name: GetChirpCount :one
+SELECT COUNT(*) FROM chirps
+`
+
+func (q *Queries) GetChirpCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getChirpCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
