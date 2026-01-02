@@ -49,6 +49,24 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 	return i, err
 }
 
+const expireRefreshToken = `-- name: ExpireRefreshToken :execrows
+UPDATE refresh_tokens SET expires_at = $1, updated_at = $2 WHERE token = $3
+`
+
+type ExpireRefreshTokenParams struct {
+	ExpiresAt time.Time
+	UpdatedAt time.Time
+	Token     string
+}
+
+func (q *Queries) ExpireRefreshToken(ctx context.Context, arg ExpireRefreshTokenParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, expireRefreshToken, arg.ExpiresAt, arg.UpdatedAt, arg.Token)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const findRefreshToken = `-- name: FindRefreshToken :one
 SELECT rt.token, rt.user_id, rt.revoked_at, rt.expires_at, rt.created_at, rt.updated_at
 FROM refresh_tokens rt
