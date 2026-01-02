@@ -1,12 +1,14 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/constants"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testdb"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testutils"
 	"github.com/google/uuid"
@@ -152,8 +154,10 @@ func TestChirpService_CreateChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 			Body: "this user does not exist",
 		})
 		require.Error(t, err)
-		require.Equal(t, "failed to find user", err.Error())
-
+		require.Equal(t, "user not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
+		
 		return nil
 	})
 }
@@ -219,7 +223,9 @@ func TestChirpService_DeleteChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 			UserID: uuid.New(),
 		})
 		require.Error(t, err)
-		require.Equal(t, "failed to find user", err.Error())
+		require.Equal(t, "user not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
 
 		return nil
 	})
@@ -579,6 +585,8 @@ func TestChirpService_GetChirpByID_Returns_NotFoundError_When_ChirpDoesNotExist(
 		_, err := chirpService.GetChirpByID(testHelper.Ctx, GetChirpByIDInput{ChirpID: uuid.New()})
 		require.Error(t, err)
 		require.Equal(t, "chirp not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
 
 		return nil
 	})

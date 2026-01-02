@@ -1,10 +1,12 @@
 package services
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testutils"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -176,7 +178,9 @@ func TestUserService_FindUserByEmail_Returns_NotFound_WhenUserDoesNotExist(t *te
 		_, err := userService.FindUserByEmail(testHelper.Ctx, missingEmailInput)
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
-		
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
+
 		return nil
 	})
 }
@@ -250,6 +254,8 @@ func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testi
 		_, err := userService.FindUserByID(testHelper.Ctx, missingUserIdInput)
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
 		
 		return nil
 	})
@@ -339,6 +345,8 @@ func TestUserService_UpdateUser_Returns_NotFoundError_When_UserDoesNotExist(t *t
 		_, err := userService.UpdateUser(testHelper.Ctx, updatedUserInput)
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
 
 		return nil
 	})
@@ -390,6 +398,8 @@ func TestUserService_UpdateUserIsChirpyRed_Returns_NotFoundError_When_UserDoesNo
 		
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
+		var notFoundErr *service_errors.NotFoundError
+		require.True(t, errors.As(err, &notFoundErr))
 
 		return nil
 	})
