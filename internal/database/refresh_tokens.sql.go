@@ -89,7 +89,7 @@ func (q *Queries) FindRefreshToken(ctx context.Context, token string) (RefreshTo
 	return i, err
 }
 
-const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
+const revokeRefreshToken = `-- name: RevokeRefreshToken :execrows
 UPDATE refresh_tokens SET revoked_at = $1, updated_at = $2 WHERE token = $3
 `
 
@@ -99,7 +99,10 @@ type RevokeRefreshTokenParams struct {
 	Token     string
 }
 
-func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) error {
-	_, err := q.db.ExecContext(ctx, revokeRefreshToken, arg.RevokedAt, arg.UpdatedAt, arg.Token)
-	return err
+func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, revokeRefreshToken, arg.RevokedAt, arg.UpdatedAt, arg.Token)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

@@ -135,15 +135,22 @@ func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput)
 
 func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) error {
 	now := time.Now()
-	err := s.Db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
+	affectedRows, err := s.Db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
 		Token: input.RefreshToken,
 		RevokedAt: sql.NullTime{Time: now, Valid: true},
 		UpdatedAt: now,
 	})
+
 	if err != nil {
 		errorMessage := "error revoking refresh token"
 		log.Printf("%s: %v", errorMessage, err)
 		return service_errors.NewInternalServerError(errorMessage)
+	}
+
+	if affectedRows == 0 {
+		errorMessage := "refresh token not found"
+		log.Print(errorMessage)
+		return service_errors.NewNotFoundError(errorMessage)
 	}
 
 	return nil

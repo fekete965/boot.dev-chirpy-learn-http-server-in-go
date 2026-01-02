@@ -10,7 +10,7 @@ INNER JOIN users u ON u.id = rt.user_id
 WHERE token = $1
 LIMIT 1;
 
--- name: RevokeRefreshToken :exec
+-- name: RevokeRefreshToken :execrows
 UPDATE refresh_tokens SET revoked_at = $1, updated_at = $2 WHERE token = $3;
 
 -- name: ExpireRefreshToken :execrows
