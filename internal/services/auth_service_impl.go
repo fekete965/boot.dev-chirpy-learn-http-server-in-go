@@ -38,6 +38,11 @@ func NewAuthService(input NewAuthServiceInput) *authService {
 func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error)  {
 	user, err := s.UserService.FindUserByEmail(ctx, FindUserByEmailInput{Email: input.Email})
 	if err != nil {
+		var notFoundErr *service_errors.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return LoginOutput{}, err
+		}
+		
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
 		return LoginOutput{}, service_errors.NewInternalServerError(errorMessage)
@@ -159,6 +164,11 @@ func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) e
 func (s *authService) UpgradeUser(ctx context.Context, input UpgradeUserInput) error {
 	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput(input))
 	if err != nil {
+		var notFoundErr *service_errors.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return err
+		}
+
 		errorMessage := "error finding user"
 		log.Printf("%s: %v", errorMessage, err)
 		return service_errors.NewInternalServerError(errorMessage)

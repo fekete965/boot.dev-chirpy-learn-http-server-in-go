@@ -45,6 +45,11 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 
 	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
 	if err != nil {
+		var notFoundErr *service_errors.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return Chirp{}, err
+		}
+
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
 		return Chirp{}, service_errors.NewInternalServerError(errorMessage)
@@ -79,6 +84,11 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) error {
 	user, err := s.UserService.FindUserByID(ctx, FindUserByIDInput{UserID: input.UserID})
 	if err != nil {
+		var notFoundErr *service_errors.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return err
+		}
+		
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
 		return service_errors.NewInternalServerError(errorMessage)
