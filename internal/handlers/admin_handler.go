@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -40,13 +41,14 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey, err := auth.GetAPIKey(r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			log.Printf("error getting API key: %v", err)
+			utils.RespondWithPlainText(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		if apiKey != h.Cfg.PolkaWebhookSecret {
 			errorMessage := "invalid api key"
+			log.Printf("invalid API key: %s", apiKey)
 			utils.RespondWithPlainText(w, http.StatusUnauthorized, errorMessage)
 			return
 		}
