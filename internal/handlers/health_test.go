@@ -10,8 +10,7 @@ import (
 
 func TestHandleHealthCheck(t *testing.T) {
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "api/healthz", nil)
-	require.NoError(t, err)
+	req := httptest.NewRequest("GET", "/api/healthz", nil)
 
 	HandleHealthCheck.ServeHTTP(recorder, req)
 

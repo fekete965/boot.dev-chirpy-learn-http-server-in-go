@@ -81,7 +81,7 @@ func TestHandleResetInProductionMode(t *testing.T) {
 		
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "admin/reset", nil)
+		req := httptest.NewRequest("POST", "/admin/reset", nil)
 		require.NoError(t, err)
 
 		// Send request
@@ -137,7 +137,7 @@ func TestHandleResetInDevelopmentMode(t *testing.T) {
 		
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "admin/reset", nil)
+		req := httptest.NewRequest("POST", "/admin/reset", nil)
 		require.NoError(t, err)
 
 		// Send request
@@ -190,7 +190,7 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", bytes.NewBuffer(validPayload))
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
 		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
 		require.NoError(t, err)
 
@@ -235,7 +235,7 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", bytes.NewBuffer(validPayload))
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
 		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
 		require.NoError(t, err)
 
@@ -273,9 +273,8 @@ func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", bytes.NewBuffer(validPayload))
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
 		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
-		require.NoError(t, err)
 
 		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
 
@@ -301,8 +300,7 @@ func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", nil)
-		require.NoError(t, err)
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
 
 		// We don't set the API key in the request header
 		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
@@ -329,8 +327,7 @@ func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) 
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", nil)
-		require.NoError(t, err)
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
 
 		// We set the API key in the request header but using the wrong format
 		req.Header.Set("Authorization", "FromApiKeyFormat this-is-a-token")
@@ -359,8 +356,7 @@ func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 
 		// Setup request
 		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("POST", "api/polka/webhooks", nil)
-		require.NoError(t, err)
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
 
 		// We set the API key in the request header with an invalid API key
 		req.Header.Set("Authorization", "ApiKey this-is-an-invalid-api-key")
@@ -390,9 +386,8 @@ func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
 		// Setup request
 		recorder := httptest.NewRecorder()
 		// Set an invalid payload format
-		req, err := http.NewRequest("POST", "api/polka/webhooks", strings.NewReader("invalid payload"))
+		req := httptest.NewRequest("POST", "/api/polka/webhooks", strings.NewReader("invalid payload"))
 		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
-		require.NoError(t, err)
 
 		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
 
