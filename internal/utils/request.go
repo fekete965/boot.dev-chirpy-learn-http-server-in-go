@@ -8,6 +8,7 @@ import (
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -20,6 +21,8 @@ func GetQueryParam(r *http.Request, paramName string, defaultValue *string) *str
 	return &param
 }
 
+var validate *validator.Validate = validator.New(validator.WithRequiredStructEnabled())
+
 func DecodeRequestBody[T any](r *http.Request) (T, error) {
 	var data T
 
@@ -30,6 +33,14 @@ func DecodeRequestBody[T any](r *http.Request) (T, error) {
 	if err != nil {
 		errorMessage := "error decoding request body"
 		log.Printf("%s: %v", errorMessage, err)
+		return data, service_errors.NewBadRequestError(errorMessage)
+	}
+
+	validate = validator.New(validator.WithRequiredStructEnabled())
+	err = validate.Struct(data)
+	if err != nil {
+		errorMessage := "validation error"
+		log.Print(errorMessage)
 		return data, service_errors.NewBadRequestError(errorMessage)
 	}
 
