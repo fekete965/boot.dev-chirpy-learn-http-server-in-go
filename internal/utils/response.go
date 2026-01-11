@@ -26,7 +26,7 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "text/json; charset=utf-8")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	w.Write(marshalledData)
 }

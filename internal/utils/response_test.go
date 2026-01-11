@@ -67,7 +67,7 @@ func TestRespondWithJSON(t *testing.T) {
 	}
 
 	currentContentType := recorder.Header().Get("Content-Type")
-	expectedContentType := "text/json; charset=utf-8"
+	expectedContentType := "application/json"
 
 	if currentContentType != expectedContentType {
 		t.Errorf("Expected %s content type, but received %s", expectedContentType, currentContentType)
