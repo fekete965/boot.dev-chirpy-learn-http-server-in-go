@@ -9,10 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/config"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/models"
-	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/services"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testdb"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testutils"
 	"github.com/google/uuid"
@@ -30,23 +28,7 @@ func setupTestData(t *testing.T, q *database.Queries, ctx context.Context) *data
 	return user
 }
 
-func getHandlers(cfg *config.ApiConfig, q *database.Queries) *Handlers {
-	// Create new services
-	newServices := services.NewServices(services.NewServicesInput{
-		Cfg: cfg,
-		Db: q,
-	})
-
-	// Create new handlers
-	handlers := NewHandlers(NewHandlersInput{
-		Cfg: cfg,
-		Services: newServices,
-	})
-
-	return handlers
-}
-
-func TestHandleResetInProductionMode(t *testing.T) {
+func TestHandleReset_InProductionMode(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	cfg := testutils.GetTestApiConfig()
@@ -65,7 +47,7 @@ func TestHandleResetInProductionMode(t *testing.T) {
 		cfg.FileserverHits.Add(10)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup base cases
 		initialUserCount, err := q.GetUserCount(testHelper.Ctx)
@@ -84,7 +66,7 @@ func TestHandleResetInProductionMode(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin/reset", nil)
 		require.NoError(t, err)
 
-		// Send request
+		// Handle the request
 		handlers.HandleReset().ServeHTTP(recorder, req)
 
 		// Check response
@@ -107,7 +89,7 @@ func TestHandleResetInProductionMode(t *testing.T) {
 	})
 }
 
-func TestHandleResetInDevelopmentMode(t *testing.T) {
+func TestHandleReset_InDevelopmentMode(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 
 	cfg := testutils.GetTestApiConfig()
@@ -121,7 +103,7 @@ func TestHandleResetInDevelopmentMode(t *testing.T) {
 		cfg.FileserverHits.Add(10)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup base cases
 		initialUserCount, err := q.GetUserCount(testHelper.Ctx)
@@ -140,7 +122,7 @@ func TestHandleResetInDevelopmentMode(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin/reset", nil)
 		require.NoError(t, err)
 
-		// Send request
+		// Handle the request
 		handlers.HandleReset().ServeHTTP(recorder, req)
 
 		// Check response
@@ -186,7 +168,7 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 		require.Equal(t, initialUserData.IsChirpyRed, false)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -231,7 +213,7 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 		require.Equal(t, initialUserData.IsChirpyRed, false)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -269,7 +251,7 @@ func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 		require.NoError(t, err)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -296,7 +278,7 @@ func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 		setupTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -323,7 +305,7 @@ func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) 
 		setupTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -352,7 +334,7 @@ func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 		setupTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
@@ -381,7 +363,7 @@ func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
 		setupTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
-		handlers := getHandlers(cfg, q)
+		handlers := GetHandlers(cfg, q)
 
 		// Setup request
 		recorder := httptest.NewRecorder()
