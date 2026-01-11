@@ -11,7 +11,17 @@ WHERE token = $1
 LIMIT 1;
 
 -- name: RevokeRefreshToken :execrows
-UPDATE refresh_tokens SET revoked_at = $1, updated_at = $2 WHERE token = $3;
+UPDATE refresh_tokens 
+SET revoked_at = $1, updated_at = $2 
+WHERE 
+  token = $3 
+  AND revoked_at IS NULL
+  AND expires_at > CURRENT_TIMESTAMP;
 
 -- name: ExpireRefreshToken :execrows
-UPDATE refresh_tokens SET expires_at = $1, updated_at = $2 WHERE token = $3;
+UPDATE refresh_tokens
+SET expires_at = $1, updated_at = $2
+WHERE 
+  token = $3
+  AND revoked_at IS NULL
+  AND expires_at > CURRENT_TIMESTAMP;
