@@ -7,7 +7,7 @@ import (
 )
 
 type CreateChirpResource struct {
-	Body string `json:"body"`
+	Body string `json:"body" validate:"required"`
 }
 
 type CreateChirpResponse struct {
