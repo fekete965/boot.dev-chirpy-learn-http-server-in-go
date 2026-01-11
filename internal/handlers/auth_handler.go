@@ -17,7 +17,6 @@ func (h *Handlers) HandleLogin() http.Handler {
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
 			return
 		}
-		
 
 		loginOutput, err := h.Services.AuthService.Login(r.Context(), services.LoginInput{
 			Email: payload.Email,
