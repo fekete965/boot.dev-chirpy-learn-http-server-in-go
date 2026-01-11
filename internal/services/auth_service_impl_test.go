@@ -339,6 +339,90 @@ func TestAuthService_RevokeToken_Returns_NotFoundError_When_Token_Not_Found(t *t
 	})
 }
 
+func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Revoked(t *testing.T) {
+	testHelper := testutils.SetupServiceTest(t)
+
+	testHelper.WithTx(func(queries *database.Queries) error {
+		userService := NewUserService(queries)
+		authService := NewAuthService(NewAuthServiceInput{
+			Cfg: testutils.GetTestApiConfig(),
+			Db: queries,
+			UserService: userService,
+		})
+
+		newUserEmail := "test@email.co.uk"
+		newUserPassword := "duckling"
+	
+		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
+			Email: newUserEmail,
+			Password: newUserPassword,
+		})
+		require.NoError(t, err)
+
+		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
+			Email: newUserEmail,
+			Password: newUserPassword,
+		})
+		require.NoError(t, err)
+
+		err = authService.RevokeToken(testHelper.Ctx, RevokeTokenInput{
+			RefreshToken: loginOutput.RefreshToken,
+		})
+		require.NoError(t, err)
+
+		err = authService.RevokeToken(testHelper.Ctx, RevokeTokenInput{
+			RefreshToken: loginOutput.RefreshToken,
+		})
+		require.Error(t, err)
+		require.Equal(t, "refresh token already revoked", err.Error())
+
+		return nil
+	})
+}
+
+func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Expired(t *testing.T) {
+	testHelper := testutils.SetupServiceTest(t)
+
+	testHelper.WithTx(func(queries *database.Queries) error {
+		userService := NewUserService(queries)
+		authService := NewAuthService(NewAuthServiceInput{
+			Cfg: testutils.GetTestApiConfig(),
+			Db: queries,
+			UserService: userService,
+		})
+
+		newUserEmail := "test@email.co.uk"
+		newUserPassword := "duckling"
+	
+		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
+			Email: newUserEmail,
+			Password: newUserPassword,
+		})
+		require.NoError(t, err)
+
+		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
+			Email: newUserEmail,
+			Password: newUserPassword,
+		})
+		require.NoError(t, err)
+
+		now := time.Now()
+		queries.ExpireRefreshToken(testHelper.Ctx, database.ExpireRefreshTokenParams{
+			Token: loginOutput.RefreshToken,
+			ExpiresAt: now.Add(-time.Hour),
+			UpdatedAt: now,
+		})
+
+		err = authService.RevokeToken(testHelper.Ctx, RevokeTokenInput{
+			RefreshToken: loginOutput.RefreshToken,
+		})
+		require.Error(t, err)
+		require.Equal(t, "refresh token expired", err.Error())
+
+		return nil
+	})
+}
+
 func TestAuthService_UpgradeUser(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
 

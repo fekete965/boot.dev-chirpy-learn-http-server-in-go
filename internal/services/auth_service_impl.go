@@ -139,7 +139,28 @@ func (s *authService) RefreshToken(ctx context.Context, input RefreshTokenInput)
 }
 
 func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) error {
+	refreshToken, err := s.Db.FindRefreshToken(ctx, input.RefreshToken)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errorMessage := "refresh token not found"
+			log.Print(errorMessage)
+			return service_errors.NewNotFoundError(errorMessage)
+		}
+
+		return service_errors.NewInternalServerError("error finding refresh token")
+	}
+
+	if refreshToken.RevokedAt.Valid {
+		errorMessage := "refresh token already revoked"
+		return service_errors.NewUnauthorizedError(errorMessage)
+	}
+
 	now := time.Now()
+	if refreshToken.ExpiresAt.Before(now) {
+		errorMessage := "refresh token expired"
+		return service_errors.NewUnauthorizedError(errorMessage)
+	}
+	
 	affectedRows, err := s.Db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
 		Token: input.RefreshToken,
 		RevokedAt: sql.NullTime{Time: now, Valid: true},
@@ -152,6 +173,7 @@ func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) e
 		return service_errors.NewInternalServerError(errorMessage)
 	}
 
+	// This should not happen, but for a piece of mind let's check it
 	if affectedRows == 0 {
 		errorMessage := "refresh token not found"
 		log.Print(errorMessage)
