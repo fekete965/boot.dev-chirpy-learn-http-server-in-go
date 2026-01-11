@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupTestData(t *testing.T, q *database.Queries, ctx context.Context) *database.User {
+func setupAdminHandlersTestData(t *testing.T, q *database.Queries, ctx context.Context) *database.User {
 	generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 		Db: q,
 		T: t,
@@ -97,7 +97,7 @@ func TestHandleReset_InDevelopmentMode(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupTestData(t, q, testHelper.Ctx)
+		setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		// Setup metrics
 		cfg.FileserverHits.Add(10)
@@ -152,7 +152,7 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		user := setupTestData(t, q, testHelper.Ctx)
+		user := setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		validPayload, err := json.Marshal(models.WebhookResource {
 			Event: "user.upgraded",
@@ -197,7 +197,7 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		user := setupTestData(t, q, testHelper.Ctx)
+		user := setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		validPayload, err := json.Marshal(models.WebhookResource {
 			Event: "unhandled-event-type",
@@ -275,7 +275,7 @@ func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupTestData(t, q, testHelper.Ctx)
+		setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
 		handlers := GetHandlers(cfg, q)
@@ -302,7 +302,7 @@ func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) 
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupTestData(t, q, testHelper.Ctx)
+		setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
 		handlers := GetHandlers(cfg, q)
@@ -331,7 +331,7 @@ func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupTestData(t, q, testHelper.Ctx)
+		setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
 		handlers := GetHandlers(cfg, q)
@@ -360,7 +360,7 @@ func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupTestData(t, q, testHelper.Ctx)
+		setupAdminHandlersTestData(t, q, testHelper.Ctx)
 
 		// Setup handlers
 		handlers := GetHandlers(cfg, q)
