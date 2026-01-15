@@ -23,7 +23,6 @@ func NewHandlers(input NewHandlersInput) *Handlers {
 	}
 }
 
-
 func GetHandlers(cfg *config.ApiConfig, q *database.Queries) *Handlers {
 	newServices := services.NewServices(services.NewServicesInput{
 		Cfg: cfg,

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -16,9 +15,6 @@ import (
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testutils"
 	"github.com/stretchr/testify/require"
 )
-
-const TEST_EMAIL = "test@email.co.uk"
-const TEST_PASSWORD = "duckling"
 
 func TestHandleLogin(t *testing.T) {
 	testHelper := testutils.SetupServiceTest(t)
@@ -31,15 +27,15 @@ func TestHandleLogin(t *testing.T) {
 
 		// Create a user to login with
 		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -142,14 +138,14 @@ func TestHandleLogin_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *tes
 
 		// Create a user to login with
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
-			Email: TEST_EMAIL,
+			Email: testutils.TEST_EMAIL,
 			Password: "incorrect password",
 		})
 		require.NoError(t, err)
@@ -181,15 +177,15 @@ func TestHandleLogin_Returns_NotFoundError_When_Invalid_Email(t *testing.T) {
 
 		// Create a user to login with
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
 			Email: "some-invalid@email.co.uk",
-			Password: TEST_PASSWORD,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -220,15 +216,15 @@ func TestHandleTokenRefresh(t *testing.T) {
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -274,7 +270,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
-		require.True(t, strings.Contains(recorder.Body.String(), "no authorization header provided"))
+		require.Contains(t, recorder.Body.String(), "no authorization header provided")
 
 		return nil
 	})
@@ -301,7 +297,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
-		require.True(t, strings.Contains(recorder.Body.String(), "invalid authorization header format"))
+		require.Contains(t, recorder.Body.String(), "invalid authorization header format")
 
 		return nil
 	})
@@ -345,15 +341,15 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_E
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -394,15 +390,15 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_R
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -443,15 +439,15 @@ func TestHandleTokenRevoke(t *testing.T) {
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -515,15 +511,15 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
@@ -564,15 +560,15 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 
 		// Create a user
 		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		// Login with the user to get the tokens
 		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: TEST_EMAIL,
-			Password: TEST_PASSWORD,
+			Email: testutils.TEST_EMAIL,
+			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
