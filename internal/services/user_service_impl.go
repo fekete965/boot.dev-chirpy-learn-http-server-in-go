@@ -24,14 +24,14 @@ func NewUserService(Db *database.Queries) *userService {
 }
 
 func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (User, error) {
-	existingUser, err := s.Db.FindUserByEmail(ctx, input.Email)
+	_, err := s.Db.FindUserByEmail(ctx, input.Email)
 	if err != nil && !errors.Is(err, sql.ErrNoRows){
 		errorMessage := "something went wrong while finding user by email"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
-	if existingUser.ID != uuid.Nil {
+	if err == nil {
 		errorMessage := "email already exists"
 		log.Print(errorMessage)
 		return User{}, service_errors.NewConflictError(errorMessage)
@@ -138,7 +138,7 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 		return User{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
-	if userWithSameEmail.ID != uuid.Nil {
+	if err == nil && userWithSameEmail.ID != input.UserID {
 		errorMessage := "email already exists"
 		log.Print(errorMessage)
 		return User{}, service_errors.NewConflictError(errorMessage)
