@@ -10,7 +10,7 @@ import (
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/config"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/handlers"
-	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/middlewares"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/router"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/services"
 )
 
@@ -44,32 +44,15 @@ func main() {
 		Services: newServices,
 	})
 
-	apiMiddlewares := middlewares.NewMiddlewares(middlewares.NewMiddlewaresInput{
+	muxRouter := router.GetNewRouter(router.GetNewRouterInput{
 		Cfg: cfg,
+		RouteHandlers: routeHandlers,
 	})
-
-	mux := http.NewServeMux()
-
-	mux.Handle("GET /admin/metrics", apiMiddlewares.MiddlewareHandleMetrics())
-	mux.Handle("POST /admin/reset", routeHandlers.HandleReset())
-	mux.Handle("GET /api/healthz", handlers.HandleHealthCheck)
-	mux.Handle("POST /api/chirps", routeHandlers.HandleCreateChirp())
-	mux.Handle("GET /api/chirps", routeHandlers.HandleGetAllChirps())
-	mux.Handle("GET /api/chirps/{chirpID}", routeHandlers.HandleGetChirpById())
-	mux.Handle("DELETE /api/chirps/{chirpID}", routeHandlers.HandleDeleteChirp())
-	mux.Handle("POST /api/users", routeHandlers.HandleCreateUser())
-	mux.Handle("PUT /api/users", routeHandlers.HandleUpdateUser())
-	mux.Handle("POST /api/login", routeHandlers.HandleLogin())
-	mux.Handle("POST /api/refresh", routeHandlers.HandleTokenRefresh())
-	mux.Handle("POST /api/revoke", routeHandlers.HandleTokenRevoke())
-	mux.Handle("POST /api/polka/webhooks", routeHandlers.HandlePolkaWebhooks())
-	mux.Handle("/app/assets/", apiMiddlewares.MiddlewareMetricsInc(handlers.HandleAssets))
-	mux.Handle("/app/", apiMiddlewares.MiddlewareMetricsInc(handlers.HandleHome))
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := http.Server{
 		Addr: addr,
-		Handler: mux,
+		Handler: muxRouter,
 	}
 
 	err = server.ListenAndServe()
