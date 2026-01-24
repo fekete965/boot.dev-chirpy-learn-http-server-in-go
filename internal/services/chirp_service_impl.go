@@ -96,9 +96,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 
 	chirp, err := s.GetChirpByID(ctx, GetChirpByIDInput{ChirpID: input.ChirpID})
 	if err != nil {
-		errorMessage := "failed to get chirp by id"
-		log.Printf("%s: %v", errorMessage, err)
-		return service_errors.NewInternalServerError(errorMessage)
+		return err
 	}
 
 	if chirp.UserID != user.ID {
@@ -156,7 +154,7 @@ func (s *chirpService) GetChirpByID(ctx context.Context, input GetChirpByIDInput
 
 		errorMessage := "failed to get chirp by id"
 		log.Printf("%s: %v", errorMessage, err)
-		return Chirp{}, service_errors.NewInternalServerError(errorMessage)
+		return Chirp{}, service_errors.NewBadRequestError(errorMessage)
 	}
 
 	return Chirp{
