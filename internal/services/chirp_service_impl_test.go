@@ -16,7 +16,7 @@ import (
 )
 
 func TestChirpService_CreateChirp(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -56,7 +56,7 @@ func TestChirpService_CreateChirp(t *testing.T) {
 }
 
 func TestChirpService_CreateChirp_CleansProfanity(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	type testCase struct {
@@ -109,7 +109,7 @@ func TestChirpService_CreateChirp_CleansProfanity(t *testing.T) {
 }
 
 func TestChirpService_CreateChirp_Returns_BadRequestError_When_InvalidChirpLength(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
  	testHelper.WithTx(func(queries *database.Queries) error {
@@ -138,7 +138,7 @@ func TestChirpService_CreateChirp_Returns_BadRequestError_When_InvalidChirpLengt
 }
 
 func TestChirpService_CreateChirp_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -163,7 +163,7 @@ func TestChirpService_CreateChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 }
 
 func TestChirpService_DeleteChirp(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -200,7 +200,7 @@ func TestChirpService_DeleteChirp(t *testing.T) {
 }
 
 func TestChirpService_DeleteChirp_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -232,7 +232,7 @@ func TestChirpService_DeleteChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 }
 
 func TestChirpService_DeleteChirp_Returns_NotFoundError_When_ChirpDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -255,14 +255,14 @@ func TestChirpService_DeleteChirp_Returns_NotFoundError_When_ChirpDoesNotExist(t
 			UserID: user.ID,
 		})
 		require.Error(t, err)
-		require.Equal(t, "failed to get chirp by id", err.Error())
+		require.Equal(t, "chirp not found", err.Error())
 
 		return nil
 	})
 }
 
 func TestChirpService_DeleteChirp_Returns_ForbiddenError_When_InvalidUserTryingToDeleteChirp(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -296,7 +296,7 @@ func TestChirpService_DeleteChirp_Returns_ForbiddenError_When_InvalidUserTryingT
 }
 
 func TestChirpService_GetAllChirps(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -327,7 +327,7 @@ func TestChirpService_GetAllChirps(t *testing.T) {
 }
 
 func TestChirpService_GetAllChirps_Returns_EmptySlice_When_NoChirps(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -346,7 +346,7 @@ func TestChirpService_GetAllChirps_Returns_EmptySlice_When_NoChirps(t *testing.T
 }
 
 func TestChirpService_GetAllChirps_Related_To_A_SpecificUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -387,7 +387,7 @@ func TestChirpService_GetAllChirps_Related_To_A_SpecificUser(t *testing.T) {
 }
 
 func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Desc(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -426,7 +426,7 @@ func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Desc(t *testing.T) {
 }
 
 func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Asc(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -464,7 +464,7 @@ func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Asc(t *testing.T) {
 }
 
 func TestChirpService_GetAllChirps_Defaults_To_Asc_When_Sort_Is_Nil(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -500,7 +500,7 @@ func TestChirpService_GetAllChirps_Defaults_To_Asc_When_Sort_Is_Nil(t *testing.T
 }
 
 func TestChirpService_GetAllChirps_Handles_InvalidSort(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -539,7 +539,7 @@ func TestChirpService_GetAllChirps_Handles_InvalidSort(t *testing.T) {
 }
 
 func TestChirpService_GetChirpByID(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -571,7 +571,7 @@ func TestChirpService_GetChirpByID(t *testing.T) {
 }
 
 func TestChirpService_GetChirpByID_Returns_NotFoundError_When_ChirpDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {

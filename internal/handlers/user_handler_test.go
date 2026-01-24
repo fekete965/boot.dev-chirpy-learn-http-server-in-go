@@ -18,7 +18,7 @@ import (
 )
 
 func TestHandleCreateUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -55,7 +55,7 @@ func TestHandleCreateUser(t *testing.T) {
 }
 
 func TestHandleCreateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -79,7 +79,7 @@ func TestHandleCreateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testin
 }
 
 func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -109,7 +109,7 @@ func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T)
 }
 
 func TestHandleCreateUser_Returns_ConflictError_When_Email_Already_In_Use(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -147,7 +147,7 @@ func TestHandleCreateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 }
 
 func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -177,7 +177,7 @@ func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 }
 
 func TestHandleCreateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -207,7 +207,7 @@ func TestHandleCreateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T
 }
 
 func TestHandleUpdateUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -261,7 +261,7 @@ func TestHandleUpdateUser(t *testing.T) {
 }
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -302,7 +302,7 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testin
 }
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -349,7 +349,7 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T)
 }
 
 func TestHandleUpdateUser_Returns_ConflictError_When_Email_Already_In_Use(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -403,7 +403,7 @@ func TestHandleUpdateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 }
 
 func TestHandleUpdateUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -451,7 +451,7 @@ func TestHandleUpdateUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T
 }
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_User_Is_Not_Authenticated(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -497,7 +497,7 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_User_Is_Not_Authenticat
 }
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Invalid(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -534,7 +534,7 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Invalid(t *tes
 }
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Expired(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -575,7 +575,7 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Expired(t *tes
 }
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Authorization_Header_Is_Malformed(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -616,7 +616,7 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Authorization_Header_Is
 }
 
 func TestHandleUpdateUser_Succeeds_When_Updating_To_Same_Email(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -668,7 +668,7 @@ func TestHandleUpdateUser_Succeeds_When_Updating_To_Same_Email(t *testing.T) {
 }
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -715,7 +715,7 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 }
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 

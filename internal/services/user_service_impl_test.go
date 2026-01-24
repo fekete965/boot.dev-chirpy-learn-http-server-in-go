@@ -13,7 +13,7 @@ import (
 )
 
 func TestUserService_CreateUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -40,7 +40,7 @@ func TestUserService_CreateUser(t *testing.T) {
 }
 
 func TestUserService_CreateUser_Returns_ConflictError_When_EmailAlreadyExists(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -71,7 +71,7 @@ func TestUserService_CreateUser_Returns_ConflictError_When_EmailAlreadyExists(t 
 }
 
 func TestUserService_DeleteAllUsers(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -111,7 +111,7 @@ func TestUserService_DeleteAllUsers(t *testing.T) {
 }
 
 func TestUserService_FindUserByEmail(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -151,7 +151,7 @@ func TestUserService_FindUserByEmail(t *testing.T) {
 }
 
 func TestUserService_FindUserByEmail_Returns_NotFound_WhenUserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -186,7 +186,7 @@ func TestUserService_FindUserByEmail_Returns_NotFound_WhenUserDoesNotExist(t *te
 }
 
 func TestUserService_FindUserByID(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -226,7 +226,7 @@ func TestUserService_FindUserByID(t *testing.T) {
 }
 
 func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -262,7 +262,7 @@ func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testi
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -295,7 +295,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 func TestUserService_UpdateUser_Returns_ConflictError_When_EmailAlreadyExists(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -332,7 +332,7 @@ func TestUserService_UpdateUser_Returns_ConflictError_When_EmailAlreadyExists(t 
 }
 
 func TestUserService_UpdateUser_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -353,7 +353,7 @@ func TestUserService_UpdateUser_Returns_NotFoundError_When_UserDoesNotExist(t *t
 }
 
 func TestUserService_UpdateUserIsChirpyRed(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -384,7 +384,7 @@ func TestUserService_UpdateUserIsChirpyRed(t *testing.T) {
 }
 
 func TestUserService_UpdateUserIsChirpyRed_Returns_NotFoundError_When_UserDoesNotExist(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)

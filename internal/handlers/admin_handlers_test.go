@@ -29,7 +29,7 @@ func setupAdminHandlersTestData(t *testing.T, q *database.Queries, ctx context.C
 }
 
 func TestHandleReset_InProductionMode(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 	cfg.Platform = "production"
@@ -90,7 +90,7 @@ func TestHandleReset_InProductionMode(t *testing.T) {
 }
 
 func TestHandleReset_InDevelopmentMode(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 	cfg.Platform = "dev"
@@ -146,7 +146,7 @@ func TestHandleReset_InDevelopmentMode(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -191,7 +191,7 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -236,7 +236,7 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -269,7 +269,7 @@ func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -296,7 +296,7 @@ func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -325,7 +325,7 @@ func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) 
 }
 
 func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -354,7 +354,7 @@ func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 }
 
 func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 

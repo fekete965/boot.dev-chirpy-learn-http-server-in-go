@@ -15,7 +15,7 @@ import (
 )
 
 func TestAuthService_Login(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -53,7 +53,7 @@ func TestAuthService_Login(t *testing.T) {
 }
 
 func TestAuthService_Login_Returns_NotFoundError_When_User_Not_Found(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -77,7 +77,7 @@ func TestAuthService_Login_Returns_NotFoundError_When_User_Not_Found(t *testing.
 }
 
 func TestAuthService_Login_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -108,7 +108,7 @@ func TestAuthService_Login_Returns_UnauthorizedError_When_Password_Is_Incorrect(
 }
 
 func TestAuthService_RefreshToken(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(queries *database.Queries) error {
@@ -151,7 +151,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 }
 
 func TestAuthService_RefreshToken_Return_NotFoundError_When_RefreshToken_Is_Missing(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -189,7 +189,7 @@ func TestAuthService_RefreshToken_Return_NotFoundError_When_RefreshToken_Is_Miss
 }
 
 func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_Expired(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -232,7 +232,7 @@ func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_
 }
 
 func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_Revoked(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -275,7 +275,7 @@ func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_
 }
 
 func TestAuthService_RevokeToken(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -317,7 +317,7 @@ func TestAuthService_RevokeToken(t *testing.T) {
 }
 
 func TestAuthService_RevokeToken_Returns_NotFoundError_When_Token_Not_Found(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -340,7 +340,7 @@ func TestAuthService_RevokeToken_Returns_NotFoundError_When_Token_Not_Found(t *t
 }
 
 func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Revoked(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -381,7 +381,7 @@ func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Re
 }
 
 func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Expired(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -424,7 +424,7 @@ func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Ex
 }
 
 func TestAuthService_UpgradeUser(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
@@ -459,7 +459,7 @@ func TestAuthService_UpgradeUser(t *testing.T) {
 }
 
 func TestAuthService_UpgradeUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)

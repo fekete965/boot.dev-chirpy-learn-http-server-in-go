@@ -22,7 +22,7 @@ type serviceTestHelper struct {
 	Queries *database.Queries
 }
 
-func SetupServiceTest(t *testing.T) *serviceTestHelper {
+func NewTestHelper(t *testing.T) *serviceTestHelper {
 	ctx := context.Background()
 	migrationsDir := GetMigrationsDir(t)
 	db, err := testdb.SetupPostgres(ctx, migrationsDir)

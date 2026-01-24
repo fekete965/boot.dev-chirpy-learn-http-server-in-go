@@ -17,7 +17,7 @@ import (
 )
 
 func TestHandleLogin(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -68,7 +68,7 @@ func TestHandleLogin(t *testing.T) {
 }
 
 func TestHandleLogin_Returns_BadRequest_When_Payload_Malformed(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -96,7 +96,7 @@ func TestHandleLogin_Returns_BadRequest_When_Payload_Malformed(t *testing.T) {
 }
 
 func TestHandleLogin_Returns_BadRequest_When_Payload_Is_Invalid(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -128,7 +128,7 @@ func TestHandleLogin_Returns_BadRequest_When_Payload_Is_Invalid(t *testing.T) {
 }
 
 func TestHandleLogin_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -167,7 +167,7 @@ func TestHandleLogin_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *tes
 }
 
 func TestHandleLogin_Returns_NotFoundError_When_Invalid_Email(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -206,7 +206,7 @@ func TestHandleLogin_Returns_NotFoundError_When_Invalid_Email(t *testing.T) {
 }
 
 func TestHandleTokenRefresh(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -253,7 +253,7 @@ func TestHandleTokenRefresh(t *testing.T) {
 }
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_Is_Missing(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -277,7 +277,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 }
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_Is_In_The_Wrong_Format(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -304,7 +304,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 }
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Missing(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -331,7 +331,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_M
 }
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Expired(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -380,7 +380,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_E
 }
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Revoked(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -429,7 +429,7 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_R
 }
 
 func TestHandleTokenRevoke(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -474,7 +474,7 @@ func TestHandleTokenRevoke(t *testing.T) {
 }
 
 func TestHandleTokenRevoke_Returns_NotFoundError_When_Authorization_Token_Not_Found(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -501,7 +501,7 @@ func TestHandleTokenRevoke_Returns_NotFoundError_When_Authorization_Token_Not_Fo
 }
 
 func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Already_Expired(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
@@ -550,7 +550,7 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 }
 
 func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Already_Revoked(t *testing.T) {
-	testHelper := testutils.SetupServiceTest(t)
+	testHelper := testutils.NewTestHelper(t)
 
 	cfg := testutils.GetTestApiConfig()
 
