@@ -62,7 +62,7 @@ func (h *Handlers) HandleGetAllChirps() http.Handler {
 			
 			if err != nil {
 				errorMessage := fmt.Sprintf("invalid author_id: %v", err)
-				utils.RespondWithJSON(w, http.StatusBadRequest, errorMessage)
+				utils.RespondWithPlainText(w, http.StatusBadRequest, errorMessage)
 				return
 			}
 
@@ -114,7 +114,7 @@ func (h *Handlers) HandleGetChirpById() http.Handler {
 
 		data := models.GetChirpByIdResponse{
 			ID: chirp.ID,
-			UserId: chirp.UserID,
+			UserID: chirp.UserID,
 			Body: chirp.Body,
 			CreatedAt: chirp.CreatedAt,
 			UpdatedAt: chirp.UpdatedAt,
