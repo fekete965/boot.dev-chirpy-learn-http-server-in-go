@@ -36,7 +36,7 @@ func (q *Queries) GetAllChirps(ctx context.Context, arg GetAllChirpsParams) ([]C
 	var args []any
 
 	querySegments := []string{"SELECT * FROM chirps"}
-	if arg.AuthorID != nil {
+	if arg.AuthorID != nil && *arg.AuthorID != uuid.Nil {
 		querySegments = append(querySegments, "WHERE user_id = $1")
 		args = append(args, *arg.AuthorID)
 	}
