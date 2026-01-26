@@ -2,11 +2,15 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/auth"
+	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/models"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -21,10 +25,25 @@ func GetQueryParam(r *http.Request, paramName string, defaultValue *string) *str
 	return &param
 }
 
-var validate *validator.Validate = validator.New(validator.WithRequiredStructEnabled())
+func initValidator() *validator.Validate {
+	validate := validator.New(validator.WithRequiredStructEnabled())
 
-func DecodeRequestBody[T any](r *http.Request) (T, error) {
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+	
+		return name
+	})
+
+	return validate
+}
+var validate *validator.Validate = initValidator()
+
+func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError) {
 	var data T
+	var zero T
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -33,18 +52,42 @@ func DecodeRequestBody[T any](r *http.Request) (T, error) {
 	if err != nil {
 		errorMessage := "error decoding request body"
 		log.Printf("%s: %v", errorMessage, err)
-		return data, service_errors.NewBadRequestError(errorMessage)
+
+		return zero, models.DecodeRequestBodyError{
+			Code: "DECODE_ERROR",
+			Message: errorMessage,
+			FieldErrors: nil,
+		}
 	}
 
-	validate = validator.New(validator.WithRequiredStructEnabled())
 	err = validate.Struct(data)
 	if err != nil {
+		var validateErrs validator.ValidationErrors
+		fieldErrors := make(map[string][]string)
+		
+		if errors.As(err, &validateErrs) {
+			for _, valErr := range validateErrs {
+				msgGetter, ok := FieldErrorValidationMessageGetters[valErr.Tag()]
+				if !ok {
+					msgGetter = DefaultFieldErrorMessageGetter
+				}
+
+				msg := msgGetter(valErr)
+				fieldErrors[valErr.Field()] = append(fieldErrors[valErr.Field()], msg)
+			}
+		}
+
 		errorMessage := "validation error"
 		log.Print(errorMessage)
-		return data, service_errors.NewBadRequestError(errorMessage)
+
+		return zero, models.DecodeRequestBodyError{
+			Code: "VALIDATION_ERROR",
+			Message: errorMessage,
+			FieldErrors: fieldErrors,
+		}
 	}
 
-	return data, nil
+	return data, models.DecodeRequestBodyError{}
 }
 
 func GetBearerToken(r *http.Request) (string, error) {
