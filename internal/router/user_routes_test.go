@@ -1,4 +1,4 @@
-package handlers
+package router
 
 import (
 	"bytes"
@@ -19,25 +19,22 @@ import (
 
 func TestHandleCreateUser(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Setup the request
+		app := newRouterTestApp(cfg, q)
+
 		body, err := json.Marshal(models.CreateUserResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusCreated, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
@@ -56,19 +53,16 @@ func TestHandleCreateUser(t *testing.T) {
 
 func TestHandleCreateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", strings.NewReader("malformed body"))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -80,25 +74,22 @@ func TestHandleCreateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testin
 
 func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Setup the request
+		app := newRouterTestApp(cfg, q)
+
 		body, err := json.Marshal(models.CreateUserResource{
-			Email: "invalid email",
+			Email:    "invalid email",
 			Password: "duckling",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -110,25 +101,22 @@ func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T)
 
 func TestHandleCreateUser_Returns_ConflictError_When_Email_Already_In_Use(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup the request
 		body, err := json.Marshal(models.CreateUserResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusCreated, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
@@ -137,7 +125,7 @@ func TestHandleCreateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 		req2 := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req2.Header.Set("Content-Type", "application/json")
 
-		handlers.HandleCreateUser().ServeHTTP(recorder2, req2)
+		app.Router.ServeHTTP(recorder2, req2)
 		require.Equal(t, http.StatusConflict, recorder2.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder2.Header().Get("Content-Type"))
 		require.Equal(t, "email already exists", recorder2.Body.String())
@@ -148,25 +136,22 @@ func TestHandleCreateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 
 func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Setup the request
+		app := newRouterTestApp(cfg, q)
+
 		body, err := json.Marshal(models.CreateUserResource{
-			Email: "",
+			Email:    "",
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -178,25 +163,22 @@ func TestHandleCreateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 
 func TestHandleCreateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Setup the request
+		app := newRouterTestApp(cfg, q)
+
 		body, err := json.Marshal(models.CreateUserResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: "",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleCreateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -208,22 +190,21 @@ func TestHandleCreateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T
 
 func TestHandleUpdateUser(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -231,20 +212,18 @@ func TestHandleUpdateUser(t *testing.T) {
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
@@ -262,22 +241,21 @@ func TestHandleUpdateUser(t *testing.T) {
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -285,14 +263,12 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testin
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", strings.NewReader("malformed body"))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "error decoding request body", recorder.Body.String())
@@ -303,22 +279,21 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Payload_Is_Malformed(t *testin
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -326,20 +301,18 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T)
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "invalid email",
+			Email:    "invalid email",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "validation error", recorder.Body.String())
@@ -350,29 +323,28 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Invalid(t *testing.T)
 
 func TestHandleUpdateUser_Returns_ConflictError_When_Email_Already_In_Use(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
-		// Create a another user to update
-		anotherUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: "new@email.co.uk",
+
+		// Create another user
+		anotherUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -380,20 +352,18 @@ func TestHandleUpdateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: anotherUser.Email,
+			Email:    anotherUser.Email,
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusConflict, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "email already exists", recorder.Body.String())
@@ -404,22 +374,21 @@ func TestHandleUpdateUser_Returns_ConflictError_When_Email_Already_In_Use(t *tes
 
 func TestHandleUpdateUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
+
 		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -428,20 +397,18 @@ func TestHandleUpdateUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T
 		err = q.DeleteAllUsers(testHelper.Ctx)
 		require.NoError(t, err)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusNotFound, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "user not found", recorder.Body.String())
@@ -452,42 +419,37 @@ func TestHandleUpdateUser_Returns_NotFoundError_When_User_Not_Found(t *testing.T
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_User_Is_Not_Authenticated(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
+		app := newRouterTestApp(cfg, q)
+
 		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+
+		// Login with the user to get the tokens (not used in request)
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 		require.Equal(t, newUser.ID, loginOutput.UserID)
-		require.Equal(t, newUser.Email, loginOutput.Email)
-		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Contains(t, recorder.Body.String(), "no authorization header provided")
@@ -498,33 +460,30 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_User_Is_Not_Authenticat
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Invalid(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		// Create a user to update (so the DB isn't empty)
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer invalid-token-here")
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Contains(t, recorder.Body.String(), "error during validation")
@@ -535,37 +494,32 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Invalid(t *tes
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Expired(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Create an expired token
 		expiredToken, err := auth.MakeJWT(newUser.ID, cfg.JWTSecret, -1*time.Hour)
 		require.NoError(t, err)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + expiredToken)
+		req.Header.Set("Authorization", "Bearer "+expiredToken)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Contains(t, recorder.Body.String(), "error during validation")
@@ -576,37 +530,32 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Token_Is_Expired(t *tes
 
 func TestHandleUpdateUser_Returns_UnauthorizedError_When_Authorization_Header_Is_Malformed(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Create a valid token
 		validToken, err := auth.MakeJWT(newUser.ID, cfg.JWTSecret, time.Hour)
 		require.NoError(t, err)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", validToken) // Missing "Bearer " prefix
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Contains(t, recorder.Body.String(), "invalid authorization header format")
@@ -617,22 +566,19 @@ func TestHandleUpdateUser_Returns_UnauthorizedError_When_Authorization_Header_Is
 
 func TestHandleUpdateUser_Succeeds_When_Updating_To_Same_Email(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -640,20 +586,18 @@ func TestHandleUpdateUser_Succeeds_When_Updating_To_Same_Email(t *testing.T) {
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request - updating to the same email
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
@@ -669,22 +613,19 @@ func TestHandleUpdateUser_Succeeds_When_Updating_To_Same_Email(t *testing.T) {
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -692,20 +633,18 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "",
+			Email:    "",
 			Password: "new password",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "validation error", recorder.Body.String())
@@ -716,22 +655,19 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Email_Is_Empty(t *testing.T) {
 
 func TestHandleUpdateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		handlers := GetHandlers(cfg, q)
-		
-		// Create a user to update
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		app := newRouterTestApp(cfg, q)
+
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
-		
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -739,20 +675,18 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T
 		require.Equal(t, newUser.Email, loginOutput.Email)
 		require.Equal(t, newUser.IsChirpyRed, loginOutput.IsChirpyRed)
 
-		// Setup the request
 		body, err := json.Marshal(models.UpdateUserResource{
-			Email: "new@email.co.uk",
+			Email:    "new@email.co.uk",
 			Password: "",
 		})
 		require.NoError(t, err)
-		
+
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("PUT", "/api/users", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
-		// Handle the request
-		handlers.HandleUpdateUser().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "validation error", recorder.Body.String())
@@ -760,3 +694,4 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T
 		return nil
 	})
 }
+

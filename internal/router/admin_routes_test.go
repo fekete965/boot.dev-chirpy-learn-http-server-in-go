@@ -1,4 +1,4 @@
-package handlers
+package router
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/database"
+	handlersPkg "github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/handlers"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/models"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testdb"
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/testutils"
@@ -17,10 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAdminHandlersTestData(t *testing.T, q *database.Queries, ctx context.Context) *database.User {
+func setupAdminRouteTestData(t *testing.T, q *database.Queries, ctx context.Context) *database.User {
 	generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 		Db: q,
-		T: t,
+		T:  t,
 	})
 	user := generator.GenerateUser(ctx)
 	generator.GenerateChirps(ctx, user.ID, 5)
@@ -38,7 +39,7 @@ func TestHandleReset_InProductionMode(t *testing.T) {
 		// Setup test data
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -46,38 +47,35 @@ func TestHandleReset_InProductionMode(t *testing.T) {
 		// Setup metrics
 		cfg.FileserverHits.Add(10)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
 		// Setup base cases
 		initialUserCount, err := q.GetUserCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(1), initialUserCount)
-		
+
 		initialChirpCount, err := q.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(5), initialChirpCount)
 
 		initialFileServerHits := cfg.FileserverHits.Load()
 		require.Equal(t, int32(10), initialFileServerHits)
-		
+
 		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/admin/reset", nil)
-		require.NoError(t, err)
 
-		// Handle the request
-		handlers.HandleReset().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		// Check response
 		require.Equal(t, http.StatusForbidden, recorder.Code)
 		require.Equal(t, "Forbidden operation", recorder.Body.String())
 
-		// Check database and metrics
+		// Check database and metrics unchanged
 		updatedUserCount, err := q.GetUserCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, updatedUserCount, initialUserCount)
-		
+
 		updatedChirpCount, err := q.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, updatedChirpCount, initialChirpCount)
@@ -97,43 +95,40 @@ func TestHandleReset_InDevelopmentMode(t *testing.T) {
 
 	testHelper.WithTx(func(q *database.Queries) error {
 		// Setup test data
-		setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		setupAdminRouteTestData(t, q, testHelper.Ctx)
 
 		// Setup metrics
 		cfg.FileserverHits.Add(10)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
 		// Setup base cases
 		initialUserCount, err := q.GetUserCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(1), initialUserCount)
-		
+
 		initialChirpCount, err := q.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(5), initialChirpCount)
 
 		initialFileServerHits := cfg.FileserverHits.Load()
 		require.Equal(t, int32(10), initialFileServerHits)
-		
+
 		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/admin/reset", nil)
-		require.NoError(t, err)
 
-		// Handle the request
-		handlers.HandleReset().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		// Check response
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.Equal(t, "Metric has been reset", recorder.Body.String())
 
-		// Check database and metrics
+		// Check database and metrics reset
 		updatedUserCount, err := q.GetUserCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(0), updatedUserCount)
-		
+
 		updatedChirpCount, err := q.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(0), updatedChirpCount)
@@ -147,14 +142,12 @@ func TestHandleReset_InDevelopmentMode(t *testing.T) {
 
 func TestHandlePolkaWebhooks(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		user := setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		user := setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		validPayload, err := json.Marshal(models.WebhookResource {
+		validPayload, err := json.Marshal(models.WebhookResource{
 			Event: "user.upgraded",
 			Data: models.WebhookEventData{
 				UserID: user.ID,
@@ -162,29 +155,23 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Setup the base case
 		initialUserData, err := q.FindUserById(testHelper.Ctx, user.ID)
 		require.NoError(t, err)
-		require.Equal(t, initialUserData.IsChirpyRed, false)
+		require.Equal(t, false, initialUserData.IsChirpyRed)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
-		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
-		require.NoError(t, err)
+		req.Header.Set("Authorization", "ApiKey "+cfg.PolkaWebhookSecret)
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusNoContent, recorder.Code)
-		
-		// Check updated user data
+
 		updatedUserData, err := q.FindUserById(testHelper.Ctx, user.ID)
 		require.NoError(t, err)
-		require.Equal(t, updatedUserData.IsChirpyRed, true)
+		require.Equal(t, true, updatedUserData.IsChirpyRed)
 
 		return nil
 	})
@@ -192,14 +179,12 @@ func TestHandlePolkaWebhooks(t *testing.T) {
 
 func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		user := setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		user := setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		validPayload, err := json.Marshal(models.WebhookResource {
+		validPayload, err := json.Marshal(models.WebhookResource{
 			Event: "unhandled-event-type",
 			Data: models.WebhookEventData{
 				UserID: user.ID,
@@ -207,29 +192,23 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Setup the base case
 		initialUserData, err := q.FindUserById(testHelper.Ctx, user.ID)
 		require.NoError(t, err)
-		require.Equal(t, initialUserData.IsChirpyRed, false)
+		require.Equal(t, false, initialUserData.IsChirpyRed)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
-		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
-		require.NoError(t, err)
+		req.Header.Set("Authorization", "ApiKey "+cfg.PolkaWebhookSecret)
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusNoContent, recorder.Code)
-		
-		// Check updated user data
+
 		updatedUserData, err := q.FindUserById(testHelper.Ctx, user.ID)
 		require.NoError(t, err)
-		require.Equal(t, updatedUserData.IsChirpyRed, false)
+		require.Equal(t, false, updatedUserData.IsChirpyRed)
 
 		return nil
 	})
@@ -237,12 +216,10 @@ func TestHandlePolkaWebhooks_WithUnhandledEvent(t *testing.T) {
 
 func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-
-		validPayload, err := json.Marshal(models.WebhookResource {
+		validPayload, err := json.Marshal(models.WebhookResource{
 			Event: "user.upgraded",
 			Data: models.WebhookEventData{
 				UserID: uuid.New(),
@@ -250,17 +227,14 @@ func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", bytes.NewBuffer(validPayload))
-		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
+		req.Header.Set("Authorization", "ApiKey "+cfg.PolkaWebhookSecret)
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusNotFound, recorder.Code)
 		require.Equal(t, "user not found", recorder.Body.String())
 
@@ -270,24 +244,18 @@ func TestHandlePolkaWebhooks_WithMissingUserID(t *testing.T) {
 
 func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
 
-		// We don't set the API key in the request header
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "no authorization header provided", recorder.Body.String())
 
@@ -297,26 +265,19 @@ func TestHandlePolkaWebhooks_WithoutAuthorizationHeader(t *testing.T) {
 
 func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
-
-		// We set the API key in the request header but using the wrong format
 		req.Header.Set("Authorization", "FromApiKeyFormat this-is-a-token")
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "invalid authorization header format", recorder.Body.String())
 
@@ -326,26 +287,19 @@ func TestHandlePolkaWebhooks_WithInvalidAuthorizationHeaderFormat(t *testing.T) 
 
 func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", nil)
-
-		// We set the API key in the request header with an invalid API key
 		req.Header.Set("Authorization", "ApiKey this-is-an-invalid-api-key")
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "invalid api key", recorder.Body.String())
 
@@ -355,28 +309,27 @@ func TestHandlePolkaWebhooks_WithInvalidApiKey(t *testing.T) {
 
 func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup test data
-		setupAdminHandlersTestData(t, q, testHelper.Ctx)
+		setupAdminRouteTestData(t, q, testHelper.Ctx)
 
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
-		// Set an invalid payload format
 		req := httptest.NewRequest("POST", "/api/polka/webhooks", strings.NewReader("invalid payload"))
-		req.Header.Set("Authorization", "ApiKey " + cfg.PolkaWebhookSecret)
+		req.Header.Set("Authorization", "ApiKey "+cfg.PolkaWebhookSecret)
 
-		handlers.HandlePolkaWebhooks().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
-		// Check response
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
 		require.Equal(t, "error decoding request body", recorder.Body.String())
 
 		return nil
 	})
 }
+
+// This import is kept to ensure we compile against the handlers package;
+// it also avoids accidental name shadowing when adding new tests.
+var _ = handlersPkg.Handlers{}
+

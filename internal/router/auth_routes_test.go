@@ -1,4 +1,4 @@
-package handlers
+package router
 
 import (
 	"bytes"
@@ -18,40 +18,33 @@ import (
 
 func TestHandleLogin(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user to login with
-		newUser, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		newUser, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/login", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleLogin().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
-		// Check response
-	  var response models.LoginResponse
+		var response models.LoginResponse
 		err = json.Unmarshal(recorder.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -69,26 +62,21 @@ func TestHandleLogin(t *testing.T) {
 
 func TestHandleLogin_Returns_BadRequest_When_Payload_Malformed(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request body
 		body := bytes.NewReader([]byte("bleee"))
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/login", body)
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleLogin().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
-		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"),)
+		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "error decoding request body", recorder.Body.String())
 
 		return nil
@@ -97,30 +85,25 @@ func TestHandleLogin_Returns_BadRequest_When_Payload_Malformed(t *testing.T) {
 
 func TestHandleLogin_Returns_BadRequest_When_Payload_Is_Invalid(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request body
 		body, err := json.Marshal(map[string]string{
 			"foo": "bar",
 			"baz": "qux",
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/login", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleLogin().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusBadRequest, recorder.Code)
-		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"),)
+		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "validation error", recorder.Body.String())
 
 		return nil
@@ -129,37 +112,31 @@ func TestHandleLogin_Returns_BadRequest_When_Payload_Is_Invalid(t *testing.T) {
 
 func TestHandleLogin_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user to login with
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
-			Email: testutils.TEST_EMAIL,
+			Email:    testutils.TEST_EMAIL,
 			Password: "incorrect password",
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/login", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleLogin().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
-		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"),)
+		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "invalid credentials", recorder.Body.String())
 
 		return nil
@@ -168,37 +145,31 @@ func TestHandleLogin_Returns_UnauthorizedError_When_Password_Is_Incorrect(t *tes
 
 func TestHandleLogin_Returns_NotFoundError_When_Invalid_Email(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user to login with
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request body
 		body, err := json.Marshal(models.LoginResource{
-			Email: "some-invalid@email.co.uk",
+			Email:    "some-invalid@email.co.uk",
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/login", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Handle the request
-		handlers.HandleLogin().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusNotFound, recorder.Code)
-		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"),)
+		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
 		require.Equal(t, "user not found", recorder.Body.String())
 
 		return nil
@@ -207,36 +178,28 @@ func TestHandleLogin_Returns_NotFoundError_When_Invalid_Email(t *testing.T) {
 
 func TestHandleTokenRefresh(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusOK, recorder.Code)
 		require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
@@ -254,19 +217,15 @@ func TestHandleTokenRefresh(t *testing.T) {
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_Is_Missing(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request without the authorization header
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -278,22 +237,16 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_Is_In_The_Wrong_Format(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Add the authorization header with the wrong format
 		req.Header.Set("Authorization", "this-is-a-token")
 
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -305,22 +258,16 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Header_
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Missing(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Add the correct authorization header
 		req.Header.Set("Authorization", "Bearer some-random-token")
 
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusNotFound, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -332,23 +279,19 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_M
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Expired(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -357,19 +300,15 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_E
 		_, err = q.ExpireRefreshToken(testHelper.Ctx, database.ExpireRefreshTokenParams{
 			ExpiresAt: now,
 			UpdatedAt: now,
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -381,44 +320,36 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_E
 
 func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_Revoked(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		now := time.Now()
 		_, err = q.RevokeRefreshToken(testHelper.Ctx, database.RevokeRefreshTokenParams{
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 			RevokedAt: sql.NullTime{Time: now, Valid: true},
 			UpdatedAt: now,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/refresh", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRefresh().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -430,36 +361,28 @@ func TestHandleTokenRefresh_Returns_UnauthorizedError_When_Authorization_Token_R
 
 func TestHandleTokenRevoke(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/revoke", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRevoke().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusNoContent, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -475,22 +398,16 @@ func TestHandleTokenRevoke(t *testing.T) {
 
 func TestHandleTokenRevoke_Returns_NotFoundError_When_Authorization_Token_Not_Found(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/revoke", nil)
-		
-		// Add the correct authorization header
 		req.Header.Set("Authorization", "Bearer some-random-token")
 
-		// Handle the request
-		handlers.HandleTokenRevoke().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusNotFound, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -502,23 +419,19 @@ func TestHandleTokenRevoke_Returns_NotFoundError_When_Authorization_Token_Not_Fo
 
 func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Already_Expired(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
@@ -527,19 +440,15 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 		_, err = q.ExpireRefreshToken(testHelper.Ctx, database.ExpireRefreshTokenParams{
 			ExpiresAt: now,
 			UpdatedAt: now,
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/revoke", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRevoke().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -551,44 +460,36 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 
 func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Already_Revoked(t *testing.T) {
 	testHelper := testutils.NewTestHelper(t)
-
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-		// Setup handlers
-		handlers := GetHandlers(cfg, q)
+		app := newRouterTestApp(cfg, q)
 
-		// Create a user
-		_, err := handlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
-			Email: testutils.TEST_EMAIL,
+		_, err := app.RouteHandlers.Services.UserService.CreateUser(testHelper.Ctx, services.CreateUserInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
-		// Login with the user to get the tokens
-		loginOutput, err := handlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
-			Email: testutils.TEST_EMAIL,
+		loginOutput, err := app.RouteHandlers.Services.AuthService.Login(testHelper.Ctx, services.LoginInput{
+			Email:    testutils.TEST_EMAIL,
 			Password: testutils.TEST_PASSWORD,
 		})
 		require.NoError(t, err)
 
 		now := time.Now()
 		_, err = q.RevokeRefreshToken(testHelper.Ctx, database.RevokeRefreshTokenParams{
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 			RevokedAt: sql.NullTime{Time: now, Valid: true},
 			UpdatedAt: now,
 		})
 		require.NoError(t, err)
 
-		// Setup request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/revoke", nil)
-		
-		// Add the correct authorization header
-		req.Header.Set("Authorization", "Bearer " + loginOutput.RefreshToken)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.RefreshToken)
 
-		// Handle the request
-		handlers.HandleTokenRevoke().ServeHTTP(recorder, req)
+		app.Router.ServeHTTP(recorder, req)
 
 		require.Equal(t, http.StatusUnauthorized, recorder.Code)
 		require.Equal(t, "text/plain; charset=utf-8", recorder.Header().Get("Content-Type"))
@@ -597,3 +498,4 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 		return nil
 	})
 }
+
