@@ -10,7 +10,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-
 func CleanChirp(textToClean string, profaneWords []string) string {
 	chunks := strings.Split(textToClean, " ")
 
@@ -48,17 +47,62 @@ var DefaultFieldErrorMessageGetter FieldErrorMessageGetter = func(fe validator.F
 	return fmt.Sprintf("'%s' is invalid", cases.Title(language.English).String(fe.Field()))
 }
 
-var FieldErrorValidationMessageGetters = map[string]FieldErrorMessageGetter {
+var FieldErrorValidationMessageGetters = map[string]FieldErrorMessageGetter{
 	"email": func(fe validator.FieldError) string {
-		return fmt.Sprintf("'%s' must be a valid email address", cases.Title(language.English).String(fe.Field()))
+		return fmt.Sprintf(
+			"'%s' must be a valid email address",
+			cases.Title(language.English).String(fe.Field()),
+		)
 	},
 	"max": func(fe validator.FieldError) string {
-		return fmt.Sprintf("'%s' must be less than %s characters", cases.Title(language.English).String(fe.Field()), fe.Param())
+		return fmt.Sprintf(
+			"'%s' must be less than %s characters",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+		)
 	},
 	"min": func(fe validator.FieldError) string {
-		return fmt.Sprintf("'%s' must be at least %s characters long", cases.Title(language.English).String(fe.Field()), fe.Param())
+		return fmt.Sprintf(
+			"'%s' must be at least %s characters long",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+		)
+	},
+	"lte": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"'%s' must be ≤ %s (got: %v)",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+			fe.Value(),
+		)
+	},
+	"gte": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"'%s' must be ≥ %s (got: %v)",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+			fe.Value(),
+		)
+	},
+	"lt": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"'%s' must be < %s (got: %v)",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+			fe.Value(),
+		)
+	},
+	"gt": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"'%s' must be > %s (got: %v)",
+			cases.Title(language.English).String(fe.Field()),
+			fe.Param(),
+			fe.Value(),
+		)
 	},
 	"required": func(fe validator.FieldError) string {
-		return fmt.Sprintf("'%s' is required", cases.Title(language.English).String(fe.Field()))
+		return fmt.Sprintf("'%s' is required",
+			cases.Title(language.English).String(fe.Field()),
+		)
 	},
 }
