@@ -13,8 +13,8 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		payload, err := utils.DecodeRequestBody[models.CreateUserResource](r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -23,8 +23,8 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 			Password: payload.Password,
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -44,15 +44,15 @@ func (h *Handlers) HandleUpdateUser() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, _, err := utils.GetAuthenticatedUserID(r, h.Cfg.JWTSecret)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
 		payload, err := utils.DecodeRequestBody[models.UpdateUserResource](r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-    	utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -61,9 +61,10 @@ func (h *Handlers) HandleUpdateUser() http.Handler {
 			Email:    payload.Email,
 			Password: payload.Password,
 		})
+
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 

@@ -42,7 +42,7 @@ func initValidator() *validator.Validate {
 
 var validate *validator.Validate = initValidator()
 
-func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError) {
+func DecodeRequestBody[T any](r *http.Request) (T, error) {
 	var data T
 	var zero T
 
@@ -54,11 +54,11 @@ func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError
 		errorMessage := "error decoding request body"
 		log.Printf("%s: %v", errorMessage, err)
 
-		return zero, models.DecodeRequestBodyError{
-			Code: "DECODE_ERROR",
-			Message: errorMessage,
+		return zero, models.NewDecodeRequestBodyError(models.NewDecodeRequestBodyErrorInput{
+			Code:        "DECODE_ERROR",
+			Message:     errorMessage,
 			FieldErrors: nil,
-		}
+		})
 	}
 
 	err = validate.Struct(data)
@@ -81,14 +81,14 @@ func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError
 		errorMessage := "validation error"
 		log.Print(errorMessage)
 
-		return zero, models.DecodeRequestBodyError{
-			Code: "VALIDATION_ERROR",
-			Message: errorMessage,
+		return zero, models.NewDecodeRequestBodyError(models.NewDecodeRequestBodyErrorInput{
+			Code:        "VALIDATION_ERROR",
+			Message:     errorMessage,
 			FieldErrors: fieldErrors,
 		})
 	}
 
-	return data, models.DecodeRequestBodyError{}
+	return data, nil
 }
 
 func GetBearerToken(r *http.Request) (string, error) {
