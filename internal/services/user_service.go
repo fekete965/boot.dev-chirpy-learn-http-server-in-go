@@ -8,7 +8,7 @@ import (
 )
 
 type CreateUserInput struct {
-	Email string
+	Email    string
 	Password string
 }
 
@@ -21,24 +21,24 @@ type FindUserByIDInput struct {
 }
 
 type UpdateUserInput struct {
-	UserID uuid.UUID
-	Email string
+	UserID   uuid.UUID
+	Email    string
 	Password string
 }
 
 type UpdateUserIsChirpyRedInput struct {
-	UserID uuid.UUID
+	UserID      uuid.UUID
 	IsChirpyRed bool
-	UpdatedAt time.Time
+	UpdatedAt   time.Time
 }
 
 type User struct {
-	ID uuid.UUID
-	Email string
+	ID             uuid.UUID
+	Email          string
 	HashedPassword string
-	IsChirpyRed bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	IsChirpyRed    bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type UserService interface {

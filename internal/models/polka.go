@@ -7,6 +7,6 @@ type WebhookEventData struct {
 }
 
 type WebhookResource struct {
-	Event string `json:"event"`
-	Data WebhookEventData `json:"data"`
+	Event string           `json:"event"`
+	Data  WebhookEventData `json:"data"`
 }

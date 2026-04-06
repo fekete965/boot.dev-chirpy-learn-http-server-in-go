@@ -694,4 +694,3 @@ func TestHandleUpdateUser_Returns_BadRequest_When_Password_Is_Empty(t *testing.T
 		return nil
 	})
 }
-

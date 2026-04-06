@@ -19,7 +19,7 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 		}
 
 		newUser, err := h.Services.UserService.CreateUser(r.Context(), services.CreateUserInput{
-			Email: payload.Email,
+			Email:    payload.Email,
 			Password: payload.Password,
 		})
 		if err != nil {
@@ -29,11 +29,11 @@ func (h *Handlers) HandleCreateUser() http.Handler {
 		}
 
 		data := models.CreateUserResponse{
-			Id: newUser.ID,
-			Email: newUser.Email,
+			Id:          newUser.ID,
+			Email:       newUser.Email,
 			IsChirpyRed: newUser.IsChirpyRed,
-			CreatedAt: newUser.CreatedAt,
-			UpdatedAt: newUser.UpdatedAt,
+			CreatedAt:   newUser.CreatedAt,
+			UpdatedAt:   newUser.UpdatedAt,
 		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, data)
@@ -57,23 +57,22 @@ func (h *Handlers) HandleUpdateUser() http.Handler {
 		}
 
 		updatedUser, err := h.Services.UserService.UpdateUser(r.Context(), services.UpdateUserInput{
-			UserID: userID,
-			Email: payload.Email,
+			UserID:   userID,
+			Email:    payload.Email,
 			Password: payload.Password,
 		})
-		
 		if err != nil {
 			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
 			utils.RespondWithPlainText(w, statusCode, errorMessage)
 			return
 		}
-		
+
 		data := models.UpdateUserResponse{
-			Id: updatedUser.ID,
-			Email: updatedUser.Email,
+			Id:          updatedUser.ID,
+			Email:       updatedUser.Email,
 			IsChirpyRed: updatedUser.IsChirpyRed,
-			CreatedAt: updatedUser.CreatedAt,
-			UpdatedAt: updatedUser.UpdatedAt,
+			CreatedAt:   updatedUser.CreatedAt,
+			UpdatedAt:   updatedUser.UpdatedAt,
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, data)

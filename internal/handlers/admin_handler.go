@@ -26,8 +26,8 @@ func (h *Handlers) HandleReset() http.Handler {
 		// Reset the database
 		err := h.Services.UserService.DeleteAllUsers(r.Context())
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -52,11 +52,11 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			utils.RespondWithPlainText(w, http.StatusUnauthorized, errorMessage)
 			return
 		}
-		
+
 		payload, err := utils.DecodeRequestBody[models.WebhookResource](r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -69,19 +69,19 @@ func (h *Handlers) HandlePolkaWebhooks() http.Handler {
 			UserID: payload.Data.UserID,
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
 		_, err = h.Services.UserService.UpdateUserIsChirpyRed(r.Context(), services.UpdateUserIsChirpyRedInput{
-			UserID: user.ID,
+			UserID:      user.ID,
 			IsChirpyRed: true,
-			UpdatedAt: time.Now(),
+			UpdatedAt:   time.Now(),
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 

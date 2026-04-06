@@ -14,60 +14,59 @@ import (
 	"github.com/fekete965/boot.dev-chirpy-learn-http-server-in-go/internal/service_errors"
 )
 
-
 type authService struct {
-	Cfg *config.ApiConfig
-	Db *database.Queries
+	Cfg         *config.ApiConfig
+	Db          *database.Queries
 	UserService UserService
 }
 
 type NewAuthServiceInput struct {
-	Cfg *config.ApiConfig
-	Db *database.Queries
+	Cfg         *config.ApiConfig
+	Db          *database.Queries
 	UserService UserService
 }
 
 func NewAuthService(input NewAuthServiceInput) *authService {
 	return &authService{
-		Cfg: input.Cfg,
-		Db: input.Db,
+		Cfg:         input.Cfg,
+		Db:          input.Db,
 		UserService: input.UserService,
 	}
 }
 
-func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error)  {
+func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput, error) {
 	user, err := s.UserService.FindUserByEmail(ctx, FindUserByEmailInput{Email: input.Email})
 	if err != nil {
 		var notFoundErr *service_errors.NotFoundError
 		if errors.As(err, &notFoundErr) {
 			return LoginOutput{}, err
 		}
-		
+
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
 		return LoginOutput{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
 	match, err := auth.CheckPasswordHash(input.Password, user.HashedPassword)
-		if err != nil {
-			errorMessage := "error checking password"
-			log.Printf("%s: %v", errorMessage, err)
-			return LoginOutput{}, service_errors.NewInternalServerError(errorMessage)
-		}
+	if err != nil {
+		errorMessage := "error checking password"
+		log.Printf("%s: %v", errorMessage, err)
+		return LoginOutput{}, service_errors.NewInternalServerError(errorMessage)
+	}
 
-		if !match {
-			errorMessage := "invalid credentials"
-			log.Print(errorMessage)
-			return LoginOutput{}, service_errors.NewUnauthorizedError(errorMessage)
-		}
-	
+	if !match {
+		errorMessage := "invalid credentials"
+		log.Print(errorMessage)
+		return LoginOutput{}, service_errors.NewUnauthorizedError(errorMessage)
+	}
+
 	token, err := auth.MakeJWT(user.ID, s.Cfg.JWTSecret, constants.DEFAULT_EXPIRES_IN)
 	if err != nil {
 		errorMessage := "error generating access token"
 		log.Printf("%s: %v", errorMessage, err)
 		return LoginOutput{}, service_errors.NewInternalServerError(errorMessage)
 	}
-	
+
 	refreshTokenValue, err := auth.MakeRefreshToken()
 	if err != nil {
 		errorMessage := "error generating refresh token"
@@ -78,8 +77,8 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 	now := time.Now()
 	expiresAt := now.Add(constants.REFRESH_TOKEN_EXPIRES_IN)
 	refreshToken, err := s.Db.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
-		Token: refreshTokenValue,
-		UserID: user.ID,
+		Token:     refreshTokenValue,
+		UserID:    user.ID,
 		ExpiresAt: expiresAt,
 		RevokedAt: sql.NullTime{},
 		CreatedAt: now,
@@ -92,12 +91,12 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (LoginOutput,
 	}
 
 	return LoginOutput{
-		UserID: user.ID,
-		Email: user.Email,
-		IsChirpyRed: user.IsChirpyRed,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Token: token,
+		UserID:       user.ID,
+		Email:        user.Email,
+		IsChirpyRed:  user.IsChirpyRed,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Token:        token,
 		RefreshToken: refreshToken.Token,
 	}, nil
 }
@@ -160,9 +159,9 @@ func (s *authService) RevokeToken(ctx context.Context, input RevokeTokenInput) e
 		errorMessage := "refresh token expired"
 		return service_errors.NewUnauthorizedError(errorMessage)
 	}
-	
+
 	affectedRows, err := s.Db.RevokeRefreshToken(ctx, database.RevokeRefreshTokenParams{
-		Token: input.RefreshToken,
+		Token:     input.RefreshToken,
 		RevokedAt: sql.NullTime{Time: now, Valid: true},
 		UpdatedAt: now,
 	})
@@ -197,9 +196,9 @@ func (s *authService) UpgradeUser(ctx context.Context, input UpgradeUserInput) e
 	}
 
 	_, err = s.Db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
-		ID: user.ID,
+		ID:          user.ID,
 		IsChirpyRed: true,
-		UpdatedAt: time.Now(),
+		UpdatedAt:   time.Now(),
 	})
 	if err != nil {
 		errorMessage := "error updating user is chirpy red"

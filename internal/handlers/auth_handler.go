@@ -13,28 +13,28 @@ func (h *Handlers) HandleLogin() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		payload, err := utils.DecodeRequestBody[models.LoginResource](r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
 		loginOutput, err := h.Services.AuthService.Login(r.Context(), services.LoginInput{
-			Email: payload.Email,
+			Email:    payload.Email,
 			Password: payload.Password,
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
 		data := models.LoginResponse{
-			ID: loginOutput.UserID,
-			Email: loginOutput.Email,
-			IsChirpyRed: loginOutput.IsChirpyRed,
-			CreatedAt: loginOutput.CreatedAt,
-			UpdatedAt: loginOutput.UpdatedAt,
-			Token: loginOutput.Token,
+			ID:           loginOutput.UserID,
+			Email:        loginOutput.Email,
+			IsChirpyRed:  loginOutput.IsChirpyRed,
+			CreatedAt:    loginOutput.CreatedAt,
+			UpdatedAt:    loginOutput.UpdatedAt,
+			Token:        loginOutput.Token,
 			RefreshToken: loginOutput.RefreshToken,
 		}
 
@@ -46,18 +46,18 @@ func (h *Handlers) HandleTokenRefresh() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := utils.GetBearerToken(r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
-			newAccessToken, err := h.Services.AuthService.RefreshToken(r.Context(), services.RefreshTokenInput{
+		newAccessToken, err := h.Services.AuthService.RefreshToken(r.Context(), services.RefreshTokenInput{
 			RefreshToken: token,
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
-			return 
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
+			return
 		}
 
 		data := models.TokenRefreshResponse{
@@ -72,8 +72,8 @@ func (h *Handlers) HandleTokenRevoke() http.Handler {
 	return middlewares.MiddlewareLogger(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := utils.GetBearerToken(r)
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 
@@ -81,8 +81,8 @@ func (h *Handlers) HandleTokenRevoke() http.Handler {
 			RefreshToken: token,
 		})
 		if err != nil {
-			statusCode, errorMessage := utils.ServiceErrorToRequestError(err)
-			utils.RespondWithPlainText(w, statusCode, errorMessage)
+			statusCode, apiErrorResponse := utils.ServiceErrorToApiResponse(err)
+			utils.RespondWithJSON(w, statusCode, apiErrorResponse)
 			return
 		}
 

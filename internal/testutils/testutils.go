@@ -16,9 +16,9 @@ import (
 )
 
 type serviceTestHelper struct {
-	T *testing.T
-	Ctx context.Context
-	Db *sql.DB
+	T       *testing.T
+	Ctx     context.Context
+	Db      *sql.DB
 	Queries *database.Queries
 }
 
@@ -31,9 +31,9 @@ func NewTestHelper(t *testing.T) *serviceTestHelper {
 	queries := database.New(db)
 
 	return &serviceTestHelper{
-		T: t,
-		Ctx: ctx,
-		Db: db,
+		T:       t,
+		Ctx:     ctx,
+		Db:      db,
 		Queries: queries,
 	}
 }
@@ -97,10 +97,10 @@ func WithTx(t *testing.T, ctx context.Context, db *sql.DB, fn func(*database.Que
 
 func GetTestApiConfig() *config.ApiConfig {
 	return &config.ApiConfig{
-		FileserverHits: atomic.Int32{},
-		JWTSecret: "test-jwt-secret",
-		Platform: "test-platform",
+		FileserverHits:     atomic.Int32{},
+		JWTSecret:          "test-jwt-secret",
+		Platform:           "test-platform",
 		PolkaWebhookSecret: "test-polka-webhook-secret",
-		Port: 3054,
+		Port:               3054,
 	}
 }

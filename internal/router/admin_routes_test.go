@@ -332,4 +332,3 @@ func TestHandlePolkaWebhooks_WithInvalidPayload(t *testing.T) {
 // This import is kept to ensure we compile against the handlers package;
 // it also avoids accidental name shadowing when adding new tests.
 var _ = handlersPkg.Handlers{}
-

@@ -33,12 +33,13 @@ func initValidator() *validator.Validate {
 		if name == "-" {
 			return ""
 		}
-	
+
 		return name
 	})
 
 	return validate
 }
+
 var validate *validator.Validate = initValidator()
 
 func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError) {
@@ -64,7 +65,7 @@ func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError
 	if err != nil {
 		var validateErrs validator.ValidationErrors
 		fieldErrors := make(map[string][]string)
-		
+
 		if errors.As(err, &validateErrs) {
 			for _, valErr := range validateErrs {
 				msgGetter, ok := FieldErrorValidationMessageGetters[valErr.Tag()]
@@ -84,7 +85,7 @@ func DecodeRequestBody[T any](r *http.Request) (T, models.DecodeRequestBodyError
 			Code: "VALIDATION_ERROR",
 			Message: errorMessage,
 			FieldErrors: fieldErrors,
-		}
+		})
 	}
 
 	return data, models.DecodeRequestBodyError{}
@@ -106,7 +107,7 @@ func GetAuthenticatedUserID(r *http.Request, jwtSecret string) (userID uuid.UUID
 		errorMessage := fmt.Sprintf("error during token retrieval: %v", err)
 		return uuid.UUID{}, "", service_errors.NewUnauthorizedError(errorMessage)
 	}
-	
+
 	userID, err = auth.ValidateJWT(bearerToken, jwtSecret)
 	if err != nil {
 		errorMessage := fmt.Sprintf("error during validation: %v", err)

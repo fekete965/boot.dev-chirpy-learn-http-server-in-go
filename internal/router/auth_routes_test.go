@@ -498,4 +498,3 @@ func TestHandleTokenRevoke_Returns_UnauthorizedError_When_Authorization_Token_Al
 		return nil
 	})
 }
-

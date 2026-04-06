@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-
 func TestHashPassword(t *testing.T) {
 	testPassword := "test_password"
 	_, err := HashPassword(testPassword)
@@ -21,15 +20,15 @@ func TestHashPassword(t *testing.T) {
 
 func TestCheckPasswordHashWithCorrectPassword(t *testing.T) {
 	testPassword := "test_password"
-	
+
 	hash, err := HashPassword(testPassword)
 	if err != nil {
 		t.Errorf("HashPassword(%v) returned an error: %v", testPassword, err)
 	}
-	
+
 	match, err := CheckPasswordHash(testPassword, hash)
 	if err != nil {
-		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", testPassword, hash,err)
+		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", testPassword, hash, err)
 	}
 
 	if !match {
@@ -39,15 +38,15 @@ func TestCheckPasswordHashWithCorrectPassword(t *testing.T) {
 func TestCheckPasswordHashWithWrongPassword(t *testing.T) {
 	testPassword := "test_password"
 	wrongPassword := "wrong_password"
-	
+
 	hash, err := HashPassword(testPassword)
 	if err != nil {
 		t.Errorf("HashPassword(%v) returned an error: %v", testPassword, err)
 	}
-	
+
 	match, err := CheckPasswordHash(wrongPassword, hash)
 	if err != nil {
-		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", wrongPassword, hash,err)
+		t.Errorf("CheckPasswordHash(%v, %v) returned an error: %v", wrongPassword, hash, err)
 	}
 
 	if match {
@@ -131,7 +130,7 @@ func TestGetBearerToken(t *testing.T) {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
 
-	request.Header.Set("Authorization", "Bearer " + testToken)
+	request.Header.Set("Authorization", "Bearer "+testToken)
 
 	bearerToken, err := GetBearerToken(request)
 	if err != nil {
@@ -148,7 +147,7 @@ func TestGetBearerTokenWithoutAuthorizationHeader(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
-	
+
 	// Request is missing the Authorization header
 	_, err = GetBearerToken(request)
 	if err == nil {
@@ -201,7 +200,7 @@ func TestGetAPIKey(t *testing.T) {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
 
-	request.Header.Set("Authorization", "ApiKey " + testToken)
+	request.Header.Set("Authorization", "ApiKey "+testToken)
 
 	bearerToken, err := GetAPIKey(request)
 	if err != nil {
@@ -218,7 +217,7 @@ func TestGetAPIKeyWithoutAuthorizationHeader(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
-	
+
 	// Request is missing the Authorization header
 	_, err = GetAPIKey(request)
 	if err == nil {

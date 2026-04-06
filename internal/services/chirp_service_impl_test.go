@@ -22,14 +22,14 @@ func TestChirpService_CreateChirp(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
@@ -39,7 +39,7 @@ func TestChirpService_CreateChirp(t *testing.T) {
 
 		newChirp, err := chirpService.CreateChirp(testHelper.Ctx, CreateChirpInput{
 			UserID: user.ID,
-			Body: "test chirp",
+			Body:   "test chirp",
 		})
 		require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func TestChirpService_CreateChirp(t *testing.T) {
 
 		chirpCountAfter, err := chirpService.Db.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
-		require.Equal(t, int64(chirpCountBefore + 1), chirpCountAfter)
+		require.Equal(t, int64(chirpCountBefore+1), chirpCountAfter)
 
 		return nil
 	})
@@ -60,7 +60,7 @@ func TestChirpService_CreateChirp_CleansProfanity(t *testing.T) {
 	testCfg := testutils.GetTestApiConfig()
 
 	type testCase struct {
-		input string
+		input    string
 		expected string
 	}
 	testCases := make([]testCase, 0)
@@ -69,36 +69,36 @@ func TestChirpService_CreateChirp_CleansProfanity(t *testing.T) {
 		expected1 := fmt.Sprintf("Testing the word %s", strings.Repeat("*", 4))
 
 		testCases = append(testCases, testCase{
-			input: input1,
+			input:    input1,
 			expected: expected1,
 		})
 
 		input2 := fmt.Sprintf("Testing the word %s!", word)
 		expected2 := fmt.Sprintf("Testing the word %s!", word)
 		testCases = append(testCases, testCase{
-			input: input2,
+			input:    input2,
 			expected: expected2,
 		})
 	}
 
- 	testHelper.WithTx(func(queries *database.Queries) error {
+	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		for _, testCase := range testCases {
 			newChirp, err := chirpService.CreateChirp(testHelper.Ctx, CreateChirpInput{
 				UserID: user.ID,
-				Body: testCase.input,
+				Body:   testCase.input,
 			})
 			require.NoError(t, err)
 			require.Equal(t, newChirp.Body, testCase.expected)
@@ -112,23 +112,23 @@ func TestChirpService_CreateChirp_Returns_BadRequestError_When_InvalidChirpLengt
 	testHelper := testutils.NewTestHelper(t)
 	testCfg := testutils.GetTestApiConfig()
 
- 	testHelper.WithTx(func(queries *database.Queries) error {
+	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		_, err := chirpService.CreateChirp(testHelper.Ctx, CreateChirpInput{
 			UserID: user.ID,
-			Body: strings.Repeat("a", constants.MAX_CHIRP_LENGTH + 10),
+			Body:   strings.Repeat("a", constants.MAX_CHIRP_LENGTH+10),
 		})
 		require.Error(t, err)
 		require.Equal(t, "invalid chirp length", err.Error())
@@ -144,20 +144,20 @@ func TestChirpService_CreateChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		_, err := chirpService.CreateChirp(testHelper.Ctx, CreateChirpInput{
 			UserID: uuid.New(),
-			Body: "this user does not exist",
+			Body:   "this user does not exist",
 		})
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
 		var notFoundErr *service_errors.NotFoundError
 		require.True(t, errors.As(err, &notFoundErr))
-		
+
 		return nil
 	})
 }
@@ -169,15 +169,15 @@ func TestChirpService_DeleteChirp(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
@@ -187,13 +187,13 @@ func TestChirpService_DeleteChirp(t *testing.T) {
 
 		err = chirpService.DeleteChirp(testHelper.Ctx, DeleteChirpInput{
 			ChirpID: chirps[0].ID,
-			UserID: user.ID,
+			UserID:  user.ID,
 		})
 		require.NoError(t, err)
 
 		chirpCountAfter, err := chirpService.Db.GetChirpCount(testHelper.Ctx)
 		require.NoError(t, err)
-		require.Equal(t, int64(chirpCountBefore - 1), chirpCountAfter)
+		require.Equal(t, int64(chirpCountBefore-1), chirpCountAfter)
 
 		return nil
 	})
@@ -206,21 +206,21 @@ func TestChirpService_DeleteChirp_Returns_NotFoundError_When_UserDoesNotExist(t 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		err := chirpService.DeleteChirp(testHelper.Ctx, DeleteChirpInput{
 			ChirpID: chirps[0].ID,
-			UserID: uuid.New(),
+			UserID:  uuid.New(),
 		})
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
@@ -238,21 +238,21 @@ func TestChirpService_DeleteChirp_Returns_NotFoundError_When_ChirpDoesNotExist(t
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		err := chirpService.DeleteChirp(testHelper.Ctx, DeleteChirpInput{
 			ChirpID: uuid.New(),
-			UserID: user.ID,
+			UserID:  user.ID,
 		})
 		require.Error(t, err)
 		require.Equal(t, "chirp not found", err.Error())
@@ -268,7 +268,7 @@ func TestChirpService_DeleteChirp_Returns_ForbiddenError_When_InvalidUserTryingT
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		users := generator.GenerateUsers(testHelper.Ctx, 2)
 		user1 := users[0]
@@ -279,14 +279,14 @@ func TestChirpService_DeleteChirp_Returns_ForbiddenError_When_InvalidUserTryingT
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		err := chirpService.DeleteChirp(testHelper.Ctx, DeleteChirpInput{
 			ChirpID: chirp1.ID,
-			UserID: user2.ID,
+			UserID:  user2.ID,
 		})
 		require.Error(t, err)
 		require.Equal(t, "invalid user permission", err.Error())
@@ -302,19 +302,19 @@ func TestChirpService_GetAllChirps(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		users := generator.GenerateUsers(testHelper.Ctx, 2)
 		user1 := users[0]
 		user2 := users[1]
-		
+
 		generator.GenerateChirps(testHelper.Ctx, user1.ID, 5)
 		generator.GenerateChirps(testHelper.Ctx, user2.ID, 5)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
@@ -333,8 +333,8 @@ func TestChirpService_GetAllChirps_Returns_EmptySlice_When_NoChirps(t *testing.T
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{})
@@ -352,28 +352,28 @@ func TestChirpService_GetAllChirps_Related_To_A_SpecificUser(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		users := generator.GenerateUsers(testHelper.Ctx, 2)
 		user1 := users[0]
 		user2 := users[1]
-		
+
 		generator.GenerateChirps(testHelper.Ctx, user1.ID, 5)
 		generator.GenerateChirps(testHelper.Ctx, user2.ID, 5)
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{
 			UserID: &user1.ID,
-			Sort: &constants.DEFAULT_SORT,
+			Sort:   &constants.DEFAULT_SORT,
 		})
 		require.NoError(t, err)
-		
+
 		require.Equal(t, 5, len(chirps))
 
 		chirpUserIds := make([]uuid.UUID, len(chirps))
@@ -393,30 +393,29 @@ func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Desc(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
-		
+
 		sort := "desc"
 		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{
 			UserID: &user.ID,
-			Sort: &sort,
+			Sort:   &sort,
 		})
 		require.NoError(t, err)
 		require.Equal(t, 5, len(chirps))
 
-
-		for i := 0; i < len(chirps) - 1; i++ {
+		for i := 0; i < len(chirps)-1; i++ {
 			currentChirp := chirps[i]
-			nextChirp := chirps[i + 1]
+			nextChirp := chirps[i+1]
 
 			require.True(t, currentChirp.CreatedAt.After(nextChirp.CreatedAt))
 		}
@@ -432,18 +431,18 @@ func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Asc(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
-		
+
 		sort := "asc"
 		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{
 			Sort: &sort,
@@ -451,10 +450,9 @@ func TestChirpService_GetAllChirps_Sorted_By_CreatedAt_Asc(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 5, len(chirps))
 
-
-		for i := 0; i < len(chirps) - 1; i++ {
+		for i := 0; i < len(chirps)-1; i++ {
 			currentChirp := chirps[i]
-			nextChirp := chirps[i + 1]
+			nextChirp := chirps[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -470,27 +468,25 @@ func TestChirpService_GetAllChirps_Defaults_To_Asc_When_Sort_Is_Nil(t *testing.T
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
-		
-		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{
-		})
+
+		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{})
 		require.NoError(t, err)
 		require.Equal(t, 5, len(chirps))
 
-
-		for i := 0; i < len(chirps) - 1; i++ {
+		for i := 0; i < len(chirps)-1; i++ {
 			currentChirp := chirps[i]
-			nextChirp := chirps[i + 1]
+			nextChirp := chirps[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -506,30 +502,29 @@ func TestChirpService_GetAllChirps_Handles_InvalidSort(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
-		
+
 		invalidSort := "invalid_sort"
 		chirps, err := chirpService.GetAllChirps(testHelper.Ctx, GetAllChirpsInput{
 			UserID: &user.ID,
-			Sort: &invalidSort,
+			Sort:   &invalidSort,
 		})
 		require.NoError(t, err)
 		require.Equal(t, 5, len(chirps))
 
-
-		for i := 0; i < len(chirps) - 1; i++ {
+		for i := 0; i < len(chirps)-1; i++ {
 			currentChirp := chirps[i]
-			nextChirp := chirps[i + 1]
+			nextChirp := chirps[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -545,7 +540,7 @@ func TestChirpService_GetChirpByID(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: queries,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -553,8 +548,8 @@ func TestChirpService_GetChirpByID(t *testing.T) {
 
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
@@ -577,8 +572,8 @@ func TestChirpService_GetChirpByID_Returns_NotFoundError_When_ChirpDoesNotExist(
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		chirpService := NewChirpService(NewChirpServiceInput{
-			Cfg: testCfg,
-			Db: queries,
+			Cfg:         testCfg,
+			Db:          queries,
 			UserService: userService,
 		})
 

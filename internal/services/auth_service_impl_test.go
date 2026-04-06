@@ -20,22 +20,22 @@ func TestAuthService_Login(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		newUser, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestAuthService_Login(t *testing.T) {
 		require.NotEqual(t, loginOutput.Token, "")
 		require.False(t, loginOutput.CreatedAt.IsZero())
 		require.False(t, loginOutput.UpdatedAt.IsZero())
-		
+
 		return nil
 	})
 }
@@ -58,13 +58,13 @@ func TestAuthService_Login_Returns_NotFoundError_When_User_Not_Found(t *testing.
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		_, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: "test@email.co.uk",
+			Email:    "test@email.co.uk",
 			Password: "duckling",
 		})
 		require.Error(t, err)
@@ -82,27 +82,27 @@ func TestAuthService_Login_Returns_UnauthorizedError_When_Password_Is_Incorrect(
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		_, err = authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: "incorrect password",
 		})
 		require.Error(t, err)
 		require.Equal(t, "invalid credentials", err.Error())
-		
+
 		return nil
 	})
 }
@@ -114,26 +114,26 @@ func TestAuthService_RefreshToken(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: cfg,
-			Db: queries,
+			Cfg:         cfg,
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
-		
+
 		newAccessToken, err := authService.RefreshToken(testHelper.Ctx, RefreshTokenInput{
 			RefreshToken: loginOutput.RefreshToken,
 		})
@@ -156,26 +156,26 @@ func TestAuthService_RefreshToken_Return_NotFoundError_When_RefreshToken_Is_Miss
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		_, err = authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
-		
+
 		_, err = authService.RefreshToken(testHelper.Ctx, RefreshTokenInput{
 			RefreshToken: "some random token",
 		})
@@ -194,29 +194,29 @@ func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		now := time.Now()
 		queries.ExpireRefreshToken(testHelper.Ctx, database.ExpireRefreshTokenParams{
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 			ExpiresAt: now.Add(-time.Hour),
 			UpdatedAt: now,
 		})
@@ -237,29 +237,29 @@ func TestAuthService_RefreshToken_Return_UnauthorizedError_When_RefreshToken_Is_
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		now := time.Now()
 		queries.RevokeRefreshToken(testHelper.Ctx, database.RevokeRefreshTokenParams{
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 			RevokedAt: sql.NullTime{Time: now, Valid: true},
 			UpdatedAt: now,
 		})
@@ -280,22 +280,22 @@ func TestAuthService_RevokeToken(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
@@ -322,8 +322,8 @@ func TestAuthService_RevokeToken_Returns_NotFoundError_When_Token_Not_Found(t *t
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
@@ -345,22 +345,22 @@ func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Re
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
@@ -386,29 +386,29 @@ func TestAuthService_RevokeToken_Returns_UnauthorizedError_When_Token_Already_Ex
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		_, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		loginOutput, err := authService.Login(testHelper.Ctx, LoginInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
 
 		now := time.Now()
 		queries.ExpireRefreshToken(testHelper.Ctx, database.ExpireRefreshTokenParams{
-			Token: loginOutput.RefreshToken,
+			Token:     loginOutput.RefreshToken,
 			ExpiresAt: now.Add(-time.Hour),
 			UpdatedAt: now,
 		})
@@ -429,16 +429,16 @@ func TestAuthService_UpgradeUser(t *testing.T) {
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 
 		newUserEmail := "test@email.co.uk"
 		newUserPassword := "duckling"
-	
+
 		newUser, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: newUserEmail,
+			Email:    newUserEmail,
 			Password: newUserPassword,
 		})
 		require.NoError(t, err)
@@ -464,8 +464,8 @@ func TestAuthService_UpgradeUser_Returns_NotFoundError_When_User_Not_Found(t *te
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
 		authService := NewAuthService(NewAuthServiceInput{
-			Cfg: testutils.GetTestApiConfig(),
-			Db: queries,
+			Cfg:         testutils.GetTestApiConfig(),
+			Db:          queries,
 			UserService: userService,
 		})
 

@@ -77,7 +77,7 @@ func TestRespondWithJSON(t *testing.T) {
 		t.Errorf("Expected body not to be empty")
 	}
 
-	expectedBody := `{"message":"Hello, there!"}`	
+	expectedBody := `{"message":"Hello, there!"}`
 	if recorder.Body.String() != expectedBody {
 		t.Errorf("Expected body to be %s, but received %s", expectedBody, recorder.Body.String())
 	}

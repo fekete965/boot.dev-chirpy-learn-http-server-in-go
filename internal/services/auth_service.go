@@ -8,17 +8,17 @@ import (
 )
 
 type LoginInput struct {
-	Email string
+	Email    string
 	Password string
 }
 
 type LoginOutput struct {
-	UserID uuid.UUID
-	Email string
-	IsChirpyRed bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Token string
+	UserID       uuid.UUID
+	Email        string
+	IsChirpyRed  bool
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Token        string
 	RefreshToken string
 }
 
@@ -35,7 +35,7 @@ type UpgradeUserInput struct {
 }
 
 type AuthService interface {
-	Login(ctx context.Context, input LoginInput) (LoginOutput, error) 
+	Login(ctx context.Context, input LoginInput) (LoginOutput, error)
 	RefreshToken(ctx context.Context, input RefreshTokenInput) (string, error)
 	RevokeToken(ctx context.Context, input RevokeTokenInput) error
 	UpgradeUser(ctx context.Context, input UpgradeUserInput) error

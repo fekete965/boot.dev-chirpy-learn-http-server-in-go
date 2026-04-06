@@ -13,11 +13,11 @@ import (
 )
 
 type ApiConfig struct {
-	FileserverHits atomic.Int32
-	JWTSecret string
-	Platform string
+	FileserverHits     atomic.Int32
+	JWTSecret          string
+	Platform           string
 	PolkaWebhookSecret string
-	Port int
+	Port               int
 }
 
 func getServerPort() (int, error) {
@@ -74,12 +74,12 @@ func LoadEnv() (models.EnvVars, error) {
 		errorMessage := fmt.Errorf("missing environment variables: %v", strings.Join(missingEnvVariables, ", "))
 		return models.EnvVars{}, errorMessage
 	}
-	
+
 	return models.EnvVars{
-		DbUrl: dbUrl,
-		JWTSecret: jwtSecret,
-		Platform: platform,
+		DbUrl:              dbUrl,
+		JWTSecret:          jwtSecret,
+		Platform:           platform,
 		PolkaWebhookSecret: polkaWebhookSecret,
-		Port: port,
+		Port:               port,
 	}, nil
 }

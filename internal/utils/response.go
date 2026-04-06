@@ -21,7 +21,7 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	marshalledData, err := json.Marshal(data)
 	if err != nil {
 		errorMessage := fmt.Sprintf("error marshalling response: %v", err)
-		
+
 		RespondWithPlainText(w, http.StatusInternalServerError, errorMessage)
 		return
 	}

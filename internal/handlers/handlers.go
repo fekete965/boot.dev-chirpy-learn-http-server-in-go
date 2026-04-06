@@ -7,18 +7,18 @@ import (
 )
 
 type Handlers struct {
-	Cfg *config.ApiConfig
+	Cfg      *config.ApiConfig
 	Services *services.Services
 }
 
 type NewHandlersInput struct {
-	Cfg *config.ApiConfig
+	Cfg      *config.ApiConfig
 	Services *services.Services
 }
 
 func NewHandlers(input NewHandlersInput) *Handlers {
 	return &Handlers{
-		Cfg: input.Cfg,
+		Cfg:      input.Cfg,
 		Services: input.Services,
 	}
 }
@@ -26,11 +26,11 @@ func NewHandlers(input NewHandlersInput) *Handlers {
 func GetHandlers(cfg *config.ApiConfig, q *database.Queries) *Handlers {
 	newServices := services.NewServices(services.NewServicesInput{
 		Cfg: cfg,
-		Db: q,
+		Db:  q,
 	})
 
 	handlers := NewHandlers(NewHandlersInput{
-		Cfg: cfg,
+		Cfg:      cfg,
 		Services: newServices,
 	})
 

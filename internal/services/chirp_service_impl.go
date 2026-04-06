@@ -16,21 +16,21 @@ import (
 )
 
 type NewChirpServiceInput struct {
-	Cfg *config.ApiConfig
-	Db *database.Queries
+	Cfg         *config.ApiConfig
+	Db          *database.Queries
 	UserService UserService
 }
 
 type chirpService struct {
-	Cfg *config.ApiConfig
-	Db *database.Queries
+	Cfg         *config.ApiConfig
+	Db          *database.Queries
 	UserService UserService
 }
 
 func NewChirpService(input NewChirpServiceInput) *chirpService {
 	return &chirpService{
-		Cfg: input.Cfg,
-		Db: input.Db,
+		Cfg:         input.Cfg,
+		Db:          input.Db,
 		UserService: input.UserService,
 	}
 }
@@ -55,16 +55,15 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 		return Chirp{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
-
 	cleanedBody := utils.CleanChirp(input.Body, constants.PROFANE_WORDS)
 
 	newChirp, err := s.Db.CreateChirp(ctx, database.CreateChirpParams{
-		ID: uuid.New(),
-		UserID: user.ID,
-		Body: cleanedBody,
+		ID:        uuid.New(),
+		UserID:    user.ID,
+		Body:      cleanedBody,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-	})		
+	})
 
 	if err != nil {
 		errorMessage := "failed to create chirp"
@@ -73,9 +72,9 @@ func (s *chirpService) CreateChirp(ctx context.Context, input CreateChirpInput) 
 	}
 
 	return Chirp{
-		ID: newChirp.ID,
-		UserID: newChirp.UserID,
-		Body: newChirp.Body,
+		ID:        newChirp.ID,
+		UserID:    newChirp.UserID,
+		Body:      newChirp.Body,
 		CreatedAt: newChirp.CreatedAt,
 		UpdatedAt: newChirp.UpdatedAt,
 	}, nil
@@ -88,7 +87,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 		if errors.As(err, &notFoundErr) {
 			return err
 		}
-		
+
 		errorMessage := "failed to find user"
 		log.Printf("%s: %v", errorMessage, err)
 		return service_errors.NewInternalServerError(errorMessage)
@@ -106,7 +105,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 	}
 
 	err = s.Db.DeleteChirp(ctx, database.DeleteChirpParams{
-		ID: chirp.ID,
+		ID:     chirp.ID,
 		UserID: user.ID,
 	})
 	if err != nil {
@@ -121,7 +120,7 @@ func (s *chirpService) DeleteChirp(ctx context.Context, input DeleteChirpInput) 
 func (s *chirpService) GetAllChirps(ctx context.Context, input GetAllChirpsInput) ([]Chirp, error) {
 	chirps, err := s.Db.GetAllChirps(ctx, database.GetAllChirpsParams{
 		AuthorID: input.UserID,
-		Sort: input.Sort,
+		Sort:     input.Sort,
 	})
 	if err != nil {
 		errorMessage := "failed to get all chirps"
@@ -132,9 +131,9 @@ func (s *chirpService) GetAllChirps(ctx context.Context, input GetAllChirpsInput
 	data := make([]Chirp, len(chirps))
 	for i, chirp := range chirps {
 		data[i] = Chirp{
-			ID: chirp.ID,
-			UserID: chirp.UserID,
-			Body: chirp.Body,
+			ID:        chirp.ID,
+			UserID:    chirp.UserID,
+			Body:      chirp.Body,
 			CreatedAt: chirp.CreatedAt,
 			UpdatedAt: chirp.UpdatedAt,
 		}
@@ -158,9 +157,9 @@ func (s *chirpService) GetChirpByID(ctx context.Context, input GetChirpByIDInput
 	}
 
 	return Chirp{
-		ID: chirp.ID,
-		UserID: chirp.UserID,
-		Body: chirp.Body,
+		ID:        chirp.ID,
+		UserID:    chirp.UserID,
+		Body:      chirp.Body,
 		CreatedAt: chirp.CreatedAt,
 		UpdatedAt: chirp.UpdatedAt,
 	}, nil

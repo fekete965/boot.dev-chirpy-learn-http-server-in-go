@@ -14,7 +14,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 type userService struct {
 	Db *database.Queries
 }
@@ -25,7 +24,7 @@ func NewUserService(Db *database.Queries) *userService {
 
 func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (User, error) {
 	_, err := s.Db.FindUserByEmail(ctx, input.Email)
-	if err != nil && !errors.Is(err, sql.ErrNoRows){
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		errorMessage := "something went wrong while finding user by email"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
@@ -36,7 +35,7 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 		log.Print(errorMessage)
 		return User{}, service_errors.NewConflictError(errorMessage)
 	}
-	
+
 	hashedPassword, err := auth.HashPassword(input.Password)
 	if err != nil {
 		errorMessage := "error hashing password"
@@ -46,11 +45,11 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 
 	now := time.Now()
 	newUser, err := s.Db.CreateUser(ctx, database.CreateUserParams{
-		ID: uuid.New(),
-		Email: input.Email,
+		ID:             uuid.New(),
+		Email:          input.Email,
 		HashedPassword: hashedPassword,
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	})
 
 	if err != nil {
@@ -60,12 +59,12 @@ func (s *userService) CreateUser(ctx context.Context, input CreateUserInput) (Us
 	}
 
 	return User{
-		ID: newUser.ID,
-		Email: newUser.Email,
+		ID:             newUser.ID,
+		Email:          newUser.Email,
 		HashedPassword: newUser.HashedPassword,
-		IsChirpyRed: newUser.IsChirpyRed,
-		CreatedAt: newUser.CreatedAt,
-		UpdatedAt: newUser.UpdatedAt,
+		IsChirpyRed:    newUser.IsChirpyRed,
+		CreatedAt:      newUser.CreatedAt,
+		UpdatedAt:      newUser.UpdatedAt,
 	}, nil
 }
 
@@ -95,12 +94,12 @@ func (s *userService) FindUserByEmail(ctx context.Context, input FindUserByEmail
 	}
 
 	return User{
-		ID: user.ID,
-		Email: user.Email,
+		ID:             user.ID,
+		Email:          user.Email,
 		HashedPassword: user.HashedPassword,
-		IsChirpyRed: user.IsChirpyRed,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		IsChirpyRed:    user.IsChirpyRed,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      user.UpdatedAt,
 	}, nil
 }
 
@@ -114,19 +113,18 @@ func (s *userService) FindUserByID(ctx context.Context, input FindUserByIDInput)
 			return User{}, service_errors.NewNotFoundError(errorMessage)
 		}
 
-
 		errorMessage := "failed to find user by id"
 		log.Printf("%s: %v", errorMessage, err)
 		return User{}, service_errors.NewInternalServerError(errorMessage)
 	}
 
 	return User{
-		ID: user.ID,
-		Email: user.Email,
+		ID:             user.ID,
+		Email:          user.Email,
 		HashedPassword: user.HashedPassword,
-		IsChirpyRed: user.IsChirpyRed,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		IsChirpyRed:    user.IsChirpyRed,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      user.UpdatedAt,
 	}, nil
 }
 
@@ -153,8 +151,8 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 	}
 
 	updatedUser, err := s.Db.UpdateUser(ctx, database.UpdateUserParams{
-		ID: input.UserID,
-		Email: input.Email,
+		ID:             input.UserID,
+		Email:          input.Email,
 		HashedPassword: hashedPassword,
 	})
 	if err != nil {
@@ -170,20 +168,20 @@ func (s *userService) UpdateUser(ctx context.Context, input UpdateUserInput) (Us
 	}
 
 	return User{
-		ID: updatedUser.ID,
-		Email: updatedUser.Email,
+		ID:             updatedUser.ID,
+		Email:          updatedUser.Email,
 		HashedPassword: updatedUser.HashedPassword,
-		IsChirpyRed: updatedUser.IsChirpyRed,
-		CreatedAt: updatedUser.CreatedAt,
-		UpdatedAt: updatedUser.UpdatedAt,
+		IsChirpyRed:    updatedUser.IsChirpyRed,
+		CreatedAt:      updatedUser.CreatedAt,
+		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
 }
 
 func (s *userService) UpdateUserIsChirpyRed(ctx context.Context, input UpdateUserIsChirpyRedInput) (User, error) {
 	updatedUser, err := s.Db.UpdateUserIsChirpyRed(ctx, database.UpdateUserIsChirpyRedParams{
-		ID: input.UserID,
+		ID:          input.UserID,
 		IsChirpyRed: input.IsChirpyRed,
-		UpdatedAt: input.UpdatedAt,
+		UpdatedAt:   input.UpdatedAt,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -198,11 +196,11 @@ func (s *userService) UpdateUserIsChirpyRed(ctx context.Context, input UpdateUse
 	}
 
 	return User{
-		ID: updatedUser.ID,
-		Email: updatedUser.Email,
+		ID:             updatedUser.ID,
+		Email:          updatedUser.Email,
 		HashedPassword: updatedUser.HashedPassword,
-		IsChirpyRed: updatedUser.IsChirpyRed,
-		CreatedAt: updatedUser.CreatedAt,
-		UpdatedAt: updatedUser.UpdatedAt,
+		IsChirpyRed:    updatedUser.IsChirpyRed,
+		CreatedAt:      updatedUser.CreatedAt,
+		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
 }

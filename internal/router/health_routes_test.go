@@ -28,4 +28,3 @@ func TestHandleHealthCheck(t *testing.T) {
 		return nil
 	})
 }
-

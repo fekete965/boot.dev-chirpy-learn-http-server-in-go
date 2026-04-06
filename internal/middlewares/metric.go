@@ -8,7 +8,7 @@ import (
 func (h *Middlewares) MiddlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h.Cfg.FileserverHits.Add(1)
-		next.ServeHTTP(w, r)	
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -22,7 +22,7 @@ func (h *Middlewares) MiddlewareHandleMetrics() http.Handler {
 				</body>
 			</html>`,
 			h.Cfg.FileserverHits.Load())
-	
+
 		w.Header().Add("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(result))

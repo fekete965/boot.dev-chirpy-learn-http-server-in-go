@@ -13,28 +13,27 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type testPayload struct {
 	Message string `json:"message"`
 }
 
 var (
-	testParamName string = "test"
-	testParamValue string = "test-value"
+	testParamName         string = "test"
+	testParamValue        string = "test-value"
 	testDefaultParamValue string = "default-test-value"
-	testPayloadValue string = "Hello, there!"
-	testToken string = "test-token"
-	testJwtSecret string = "test-jwt-secret"
+	testPayloadValue      string = "Hello, there!"
+	testToken             string = "test-token"
+	testJwtSecret         string = "test-jwt-secret"
 )
 
 func getTestPayload(t *testing.T) io.Reader {
 	testPayloadValue := testPayload{Message: testPayloadValue}
 	stringifiedPayload, err := json.Marshal(testPayloadValue)
-	if err != nil{
+	if err != nil {
 		t.Errorf("json.Marshal(%v) returned an error: %v", testPayloadValue, err)
 	}
 
-	return  bytes.NewBuffer(stringifiedPayload)
+	return bytes.NewBuffer(stringifiedPayload)
 }
 
 func getValidBearerToken(t *testing.T, userID uuid.UUID, expiresIn time.Duration) string {
@@ -91,24 +90,24 @@ func TestGetQueryParamWithDefaultValue(t *testing.T) {
 func TestGetQueryParamWithEmptyValue(t *testing.T) {
 	request, err := http.NewRequest("GET", "/?test=", nil)
 	if err != nil {
-			t.Errorf("NewRequest returned an error: %v", err)
+		t.Errorf("NewRequest returned an error: %v", err)
 	}
-	
+
 	queryParam := GetQueryParam(request, testParamName, &testDefaultParamValue)
 	if queryParam == nil {
-			t.Errorf("Query param should not be nil")
+		t.Errorf("Query param should not be nil")
 	}
 
 	if queryParam != nil && *queryParam != testDefaultParamValue {
-			t.Errorf("Expected default value %s, got %s", testDefaultParamValue, *queryParam)
+		t.Errorf("Expected default value %s, got %s", testDefaultParamValue, *queryParam)
 	}
 }
 
 func TestDecodeRequestBody(t *testing.T) {
 	payload := getTestPayload(t)
 
-	request, err := http.NewRequest("POST", "/",payload)
-	if err != nil{
+	request, err := http.NewRequest("POST", "/", payload)
+	if err != nil {
 		t.Errorf("NewRequest(\"POST\", \"/\", payload) returned an error: %v", err)
 	}
 
@@ -125,8 +124,8 @@ func TestDecodeRequestBody(t *testing.T) {
 func TestDecodeRequestBodyWithInvalidPayload(t *testing.T) {
 	invalidPayload := bytes.NewBuffer([]byte("invalid payload"))
 
-	request, err := http.NewRequest("POST", "/",invalidPayload)
-	if err != nil{
+	request, err := http.NewRequest("POST", "/", invalidPayload)
+	if err != nil {
 		t.Errorf("NewRequest(\"POST\", \"/\", invalidPayload) returned an error: %v", err)
 	}
 
@@ -141,7 +140,7 @@ func TestDecodeRequestBodyWithEmptyBody(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewRequest returned an error: %v", err)
 	}
-	
+
 	_, err = DecodeRequestBody[testPayload](request)
 	if err == nil {
 		t.Errorf("DecodeRequestBody should have returned an error for empty body")
@@ -154,7 +153,7 @@ func TestGetBearerToken(t *testing.T) {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
 
-	request.Header.Set("Authorization", "Bearer " + testToken)
+	request.Header.Set("Authorization", "Bearer "+testToken)
 
 	bearerToken, err := GetBearerToken(request)
 	if err != nil {
@@ -210,7 +209,7 @@ func TestGetAuthenticatedUserID(t *testing.T) {
 
 	userID := uuid.New()
 	validBearerToken := getValidBearerToken(t, userID, 3*time.Hour)
-	request.Header.Set("Authorization", "Bearer " + validBearerToken)
+	request.Header.Set("Authorization", "Bearer "+validBearerToken)
 
 	authenticatedUserID, token, err := GetAuthenticatedUserID(request, testJwtSecret)
 	if err != nil {
@@ -232,8 +231,8 @@ func TestGetAuthenticatedUserIDWithInvalidBearerToken(t *testing.T) {
 		t.Errorf("NewRequest(\"GET\", \"/\", nil) returned an error: %v", err)
 	}
 
-	request.Header.Set("Authorization", "Bearer " + "invalid-token")
-	
+	request.Header.Set("Authorization", "Bearer "+"invalid-token")
+
 	_, _, err = GetAuthenticatedUserID(request, testJwtSecret)
 	if err == nil {
 		t.Errorf("GetAuthenticatedUserID(...) should have returned an error stating that the bearer token is invalid")
@@ -248,7 +247,7 @@ func TestGetAuthenticatedUserIDWithExpiredBearerToken(t *testing.T) {
 
 	userID := uuid.New()
 	validBearerToken := getValidBearerToken(t, userID, -1*time.Hour)
-	request.Header.Set("Authorization", "Bearer " + validBearerToken)
+	request.Header.Set("Authorization", "Bearer "+validBearerToken)
 
 	_, _, err = GetAuthenticatedUserID(request, testJwtSecret)
 	if err == nil {

@@ -1,13 +1,13 @@
 package models
 
 type DecodeRequestBodyError struct {
-	Code string
-	Message string
+	Code        string
+	Message     string
 	FieldErrors map[string][]string
 }
 
 func (e DecodeRequestBodyError) Error() string {
-	if e.Message != "" { 
+	if e.Message != "" {
 		return e.Message
 	}
 

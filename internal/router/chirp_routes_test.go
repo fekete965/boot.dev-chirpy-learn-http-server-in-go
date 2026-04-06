@@ -26,14 +26,14 @@ import (
 func createAndLoginUser(t *testing.T, ctx context.Context, handlers *handlers.Handlers) (*services.User, *services.LoginOutput) {
 	// Create a new user
 	user, err := handlers.Services.UserService.CreateUser(ctx, services.CreateUserInput{
-		Email: testutils.TEST_EMAIL,
+		Email:    testutils.TEST_EMAIL,
 		Password: testutils.TEST_PASSWORD,
 	})
 	require.NoError(t, err)
 
 	// Login with the user
 	loginOutput, err := handlers.Services.AuthService.Login(ctx, services.LoginInput{
-		Email: user.Email,
+		Email:    user.Email,
 		Password: testutils.TEST_PASSWORD,
 	})
 	require.NoError(t, err)
@@ -48,17 +48,17 @@ func TestHandleCreateChirp(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
-		
+
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
@@ -72,7 +72,7 @@ func TestHandleCreateChirp(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -100,35 +100,34 @@ func TestHandleCreateChirp_Profanity_Filtering(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
-		
+
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 
-
 		type profanityTestCase struct {
-			chirpBody string
+			chirpBody         string
 			expectedChirpBody string
 		}
 
 		profanityTestCases := make([]profanityTestCase, len(constants.PROFANE_WORDS))
 		for i, word := range constants.PROFANE_WORDS {
 			profanityTestCases[i] = profanityTestCase{
-				chirpBody: fmt.Sprintf("This is a %s great day!", word),
+				chirpBody:         fmt.Sprintf("This is a %s great day!", word),
 				expectedChirpBody: "This is a **** great day!",
 			}
 			profanityTestCases[i] = profanityTestCase{
-				chirpBody: fmt.Sprintf("This is a %s!", word),
+				chirpBody:         fmt.Sprintf("This is a %s!", word),
 				expectedChirpBody: fmt.Sprintf("This is a %s!", word),
 			}
 		}
@@ -143,7 +142,7 @@ func TestHandleCreateChirp_Profanity_Filtering(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
 			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+			req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 			// Handle request
 			router.ServeHTTP(recorder, req)
@@ -172,17 +171,17 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Payload_Is_Malformed(t *
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		_, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
@@ -191,7 +190,7 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Payload_Is_Malformed(t *
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/chirps", strings.NewReader("invalid payload"))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -211,17 +210,17 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Body_Is_Empty(t *testing
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		_, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
@@ -235,7 +234,7 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Body_Is_Empty(t *testing
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -255,23 +254,23 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Body_Is_Too_Long(t *test
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		_, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 
 		payload, err := json.Marshal(models.CreateChirpResource{
-			Body: strings.Repeat("a", constants.MAX_CHIRP_LENGTH + 1),
+			Body: strings.Repeat("a", constants.MAX_CHIRP_LENGTH+1),
 		})
 		require.NoError(t, err)
 
@@ -279,7 +278,7 @@ func TestHandleCreateChirp_Returns_BadRequestError_When_Body_Is_Too_Long(t *test
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -299,17 +298,17 @@ func TestHandleCreateChirp_Returns_UnauthorizedError_Without_Authorization_Heade
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		payload, err := json.Marshal(models.CreateChirpResource{
@@ -340,17 +339,17 @@ func TestHandleCreateChirp_Returns_UnauthorizedError_With_Invalid_Token(t *testi
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		payload, err := json.Marshal(models.CreateChirpResource{
@@ -382,17 +381,17 @@ func TestHandleCreateChirp_Returns_NotFoundError_When_User_Is_Not_Found(t *testi
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		_, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
@@ -406,7 +405,7 @@ func TestHandleCreateChirp_Returns_NotFoundError_When_User_Is_Not_Found(t *testi
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Delete the user
 		err = newServices.UserService.DeleteAllUsers(testHelper.Ctx)
@@ -430,22 +429,22 @@ func TestHandleGetAllChirps(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -469,9 +468,9 @@ func TestHandleGetAllChirps(t *testing.T) {
 		require.Equal(t, 10, len(responseBody))
 
 		// Check that the chirps are sorted by created_at in ascending order (default sort)
-		for i := 0; i < len(responseBody) - 1; i++ {
+		for i := 0; i < len(responseBody)-1; i++ {
 			currentChirp := responseBody[i]
-			nextChirp := responseBody[i + 1]
+			nextChirp := responseBody[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -487,17 +486,17 @@ func TestHandleGetAllChirps_With_No_Chirps_Present_In_The_Database(t *testing.T)
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		// Setup the request
@@ -527,22 +526,22 @@ func TestHandleGetAllChirps_For_A_Specific_User(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -552,7 +551,7 @@ func TestHandleGetAllChirps_For_A_Specific_User(t *testing.T) {
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add the author_id query parameter
 		query := req.URL.Query()
 		query.Add("author_id", user1.ID.String())
@@ -585,22 +584,22 @@ func TestHandleGetAllChirps_For_A_Specific_User_Who_Has_No_Chirps(t *testing.T) 
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -609,7 +608,7 @@ func TestHandleGetAllChirps_For_A_Specific_User_Who_Has_No_Chirps(t *testing.T) 
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add the author_id query parameter
 		query := req.URL.Query()
 		query.Add("author_id", user2.ID.String())
@@ -638,22 +637,22 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Asc(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -663,7 +662,7 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Asc(t *testing.T) {
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add the sort query parameter to sort by created_at in ascending order
 		query := req.URL.Query()
 		query.Add("sort", "asc")
@@ -681,9 +680,9 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Asc(t *testing.T) {
 
 		require.Equal(t, 10, len(responseBody))
 
-		for i := 0; i < len(responseBody) - 1; i++ {
+		for i := 0; i < len(responseBody)-1; i++ {
 			currentChirp := responseBody[i]
-			nextChirp := responseBody[i + 1]
+			nextChirp := responseBody[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -699,22 +698,22 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Desc(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -724,7 +723,7 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Desc(t *testing.T) {
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add the sort query parameter to sort by created_at in descending order
 		query := req.URL.Query()
 		query.Add("sort", "desc")
@@ -742,9 +741,9 @@ func TestHandleGetAllChirps_With_Sort_Created_At_Desc(t *testing.T) {
 
 		require.Equal(t, 10, len(responseBody))
 
-		for i := 0; i < len(responseBody) - 1; i++ {
+		for i := 0; i < len(responseBody)-1; i++ {
 			currentChirp := responseBody[i]
-			nextChirp := responseBody[i + 1]
+			nextChirp := responseBody[i+1]
 
 			require.True(t, currentChirp.CreatedAt.After(nextChirp.CreatedAt))
 		}
@@ -760,22 +759,22 @@ func TestHandleGetAllChirps_With_Invalid_Sort_Parameter_Defaults_To_Asc(t *testi
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1 := generator.GenerateUser(testHelper.Ctx)
 		user2 := generator.GenerateUser(testHelper.Ctx)
@@ -785,7 +784,7 @@ func TestHandleGetAllChirps_With_Invalid_Sort_Parameter_Defaults_To_Asc(t *testi
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add an invalid sort query parameter, we should default to ascending order
 		query := req.URL.Query()
 		query.Add("sort", "invalid-sort-parameter")
@@ -803,9 +802,9 @@ func TestHandleGetAllChirps_With_Invalid_Sort_Parameter_Defaults_To_Asc(t *testi
 
 		require.Equal(t, 10, len(responseBody))
 
-		for i := 0; i < len(responseBody) - 1; i++ {
+		for i := 0; i < len(responseBody)-1; i++ {
 			currentChirp := responseBody[i]
-			nextChirp := responseBody[i + 1]
+			nextChirp := responseBody[i+1]
 
 			require.True(t, currentChirp.CreatedAt.Before(nextChirp.CreatedAt))
 		}
@@ -821,22 +820,22 @@ func TestHandleGetAllChirps_Returns_BadRequestError_When_Author_ID_Is_Invalid(t 
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -844,7 +843,7 @@ func TestHandleGetAllChirps_Returns_BadRequestError_When_Author_ID_Is_Invalid(t 
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/api/chirps", nil)
-		
+
 		// Add the author_id query parameter with an unknown user id
 		query := req.URL.Query()
 		query.Add("author_id", "invalid-author-id")
@@ -868,22 +867,22 @@ func TestHandleGetChirpById(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -892,8 +891,8 @@ func TestHandleGetChirpById(t *testing.T) {
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/api/chirps/" + targetChirp.ID.String(), nil)
-		
+		req := httptest.NewRequest("GET", "/api/chirps/"+targetChirp.ID.String(), nil)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -921,23 +920,23 @@ func TestHandleGetChirpById_Returns_BadRequestError_When_Chirp_ID_Is_Invalid(t *
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/api/chirps/" + "invalid-chirp-id", nil)
-		
+		req := httptest.NewRequest("GET", "/api/chirps/"+"invalid-chirp-id", nil)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -954,25 +953,25 @@ func TestHandleGetChirpById_Returns_NotFoundError_When_Chirp_Is_Not_Found(t *tes
 	cfg := testutils.GetTestApiConfig()
 
 	testHelper.WithTx(func(q *database.Queries) error {
-			newServices := services.NewServices(services.NewServicesInput{
+		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/api/chirps/" + uuid.New().String(), nil)
-		
+		req := httptest.NewRequest("GET", "/api/chirps/"+uuid.New().String(), nil)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -991,22 +990,22 @@ func TestHandleDeleteChirp(t *testing.T) {
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -1015,8 +1014,8 @@ func TestHandleDeleteChirp(t *testing.T) {
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + targetChirp.ID.String(), nil)
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+targetChirp.ID.String(), nil)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -1040,22 +1039,22 @@ func TestHandleDeleteChirp_Returns_BadRequestError_When_Chirp_ID_Is_Invalid(t *t
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -1063,8 +1062,8 @@ func TestHandleDeleteChirp_Returns_BadRequestError_When_Chirp_ID_Is_Invalid(t *t
 		// Setup the request
 		recorder := httptest.NewRecorder()
 		req := httptest.NewRequest("DELETE", "/api/chirps/invalid-chirp-id", nil)
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
-		
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -1083,31 +1082,31 @@ func TestHandleDeleteChirp_Returns_NotFoundError_When_Chirp_ID_Not_Found(t *test
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + uuid.New().String(), nil)
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
-		
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+uuid.New().String(), nil)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -1126,22 +1125,22 @@ func TestHandleDeleteChirp_Returns_NotFoundError_When_User_Is_Missing(t *testing
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -1153,8 +1152,8 @@ func TestHandleDeleteChirp_Returns_NotFoundError_When_User_Is_Missing(t *testing
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + targetChirp.ID.String(), nil)
-		req.Header.Set("Authorization", "Bearer " + loginOutput.Token)
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+targetChirp.ID.String(), nil)
+		req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
 
 		// Handle request
 		router.ServeHTTP(recorder, req)
@@ -1174,22 +1173,22 @@ func TestHandleDeleteChirp_Returns_UnauthorizedError_When_User_Is_Not_Authentica
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user := generator.GenerateUser(testHelper.Ctx)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -1197,8 +1196,8 @@ func TestHandleDeleteChirp_Returns_UnauthorizedError_When_User_Is_Not_Authentica
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + targetChirp.ID.String(), nil)
-		
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+targetChirp.ID.String(), nil)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -1217,35 +1216,35 @@ func TestHandleDeleteChirp_Returns_UnauthorizedError_When_User_Is_Unauthorized(t
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user1, user1LoginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		user2 := generator.GenerateUser(testHelper.Ctx)
 		generator.GenerateChirps(testHelper.Ctx, user1.ID, 5)
-		user2Chirps :=generator.GenerateChirps(testHelper.Ctx, user2.ID, 5)
+		user2Chirps := generator.GenerateChirps(testHelper.Ctx, user2.ID, 5)
 
 		targetChirp := user2Chirps[0]
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + targetChirp.ID.String(), nil)
-		req.Header.Set("Authorization", "Bearer " + user1LoginOutput.Token)
-		
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+targetChirp.ID.String(), nil)
+		req.Header.Set("Authorization", "Bearer "+user1LoginOutput.Token)
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 
@@ -1264,22 +1263,22 @@ func TestHandleDeleteChirp_Returns_UnauthorizedError_When_SessionToken_Is_Invali
 	testHelper.WithTx(func(q *database.Queries) error {
 		newServices := services.NewServices(services.NewServicesInput{
 			Cfg: cfg,
-			Db: q,
+			Db:  q,
 		})
 
 		routeHandlers := handlers.NewHandlers(handlers.NewHandlersInput{
-			Cfg: cfg,
+			Cfg:      cfg,
 			Services: newServices,
 		})
 
 		router := GetNewRouter(GetNewRouterInput{
 			RouteHandlers: routeHandlers,
-			Cfg: cfg,
+			Cfg:           cfg,
 		})
 
 		generator := testdb.NewGenerator(testdb.NewGeneratorInput{
 			Db: q,
-			T: t,
+			T:  t,
 		})
 		user, _ := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 		chirps := generator.GenerateChirps(testHelper.Ctx, user.ID, 5)
@@ -1287,9 +1286,9 @@ func TestHandleDeleteChirp_Returns_UnauthorizedError_When_SessionToken_Is_Invali
 
 		// Setup the request
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest("DELETE", "/api/chirps/" + targetChirp.ID.String(), nil)
+		req := httptest.NewRequest("DELETE", "/api/chirps/"+targetChirp.ID.String(), nil)
 		req.Header.Set("Authorization", "Bearer invalid-token")
-		
+
 		// Handle request
 		router.ServeHTTP(recorder, req)
 

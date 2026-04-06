@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	db *sql.DB
+	db       *sql.DB
 	initOnce sync.Once
 )
 
@@ -35,25 +35,25 @@ func SetupPostgres(ctx context.Context, migrationsDir string) (*sql.DB, error) {
 		connStr, err := pg.ConnectionString(ctx, "sslmode=disable")
 		if err != nil {
 			setupError = fmt.Errorf("failed to get connection string: %v", err)
-			return 
+			return
 		}
 
 		db, err = sql.Open("postgres", connStr)
 		if err != nil {
 			setupError = fmt.Errorf("failed to open database: %v", err)
-			return 
+			return
 		}
-		
+
 		err = goose.SetDialect("postgres")
 		if err != nil {
 			setupError = fmt.Errorf("failed to set dialect: %v", err)
-			return 
+			return
 		}
 
 		err = goose.Up(db, migrationsDir)
 		if err != nil {
 			setupError = fmt.Errorf("failed to run migrations: %v", err)
-			return 
+			return
 		}
 	})
 

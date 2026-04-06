@@ -41,4 +41,3 @@ func newRouterTestApp(cfg *config.ApiConfig, q *database.Queries) routerTestApp 
 		Router:        r,
 	}
 }
-

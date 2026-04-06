@@ -50,7 +50,7 @@ func TestCleanChirpCleansShouldNotCleanTheText(t *testing.T) {
 	profaneWords := []string{}
 	result := CleanChirp("This is a freakin great day!", profaneWords)
 	expected := "This is a freakin great day!"
-	
+
 	if result != expected {
 		t.Errorf("Expected %s, but got %s", expected, result)
 	}

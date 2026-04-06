@@ -9,7 +9,7 @@ import (
 )
 
 type GetNewRouterInput struct {
-	Cfg *config.ApiConfig
+	Cfg           *config.ApiConfig
 	RouteHandlers *handlers.Handlers
 }
 
@@ -17,7 +17,7 @@ func GetNewRouter(input GetNewRouterInput) *http.ServeMux {
 	apiMiddlewares := middlewares.NewMiddlewares(middlewares.NewMiddlewaresInput{
 		Cfg: input.Cfg,
 	})
-	
+
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /admin/metrics", apiMiddlewares.MiddlewareHandleMetrics())

@@ -32,4 +32,3 @@ func TestAdminMetrics_Returns_HTML_With_Current_Count(t *testing.T) {
 		return nil
 	})
 }
-

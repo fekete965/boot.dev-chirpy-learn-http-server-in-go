@@ -10,7 +10,7 @@ import (
 
 type GetAllChirpsParams struct {
 	AuthorID *uuid.UUID
-	Sort *string
+	Sort     *string
 }
 
 func getSortQuery(sort *string, defaultSort *string) string {
@@ -49,7 +49,7 @@ func (q *Queries) GetAllChirps(ctx context.Context, arg GetAllChirpsParams) ([]C
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var items []Chirp
 
 	for rows.Next() {

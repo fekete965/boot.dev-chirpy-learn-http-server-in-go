@@ -17,10 +17,10 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		newUserInput := CreateUserInput{
-			Email: "test@example.co.uk",
-			Password: "duckling", 
+			Email:    "test@example.co.uk",
+			Password: "duckling",
 		}
 		user, err := userService.CreateUser(testHelper.Ctx, newUserInput)
 		require.NoError(t, err)
@@ -44,10 +44,10 @@ func TestUserService_CreateUser_Returns_ConflictError_When_EmailAlreadyExists(t 
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		newUserInput := CreateUserInput{
-			Email: "test@example.co.uk",
-			Password: "duckling", 
+			Email:    "test@example.co.uk",
+			Password: "duckling",
 		}
 		user, err := userService.CreateUser(testHelper.Ctx, newUserInput)
 		require.NoError(t, err)
@@ -75,19 +75,19 @@ func TestUserService_DeleteAllUsers(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test3@example.co.uk",
-				Password: "duckling", 
+				Email:    "test3@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		for _, user := range users {
@@ -115,15 +115,15 @@ func TestUserService_FindUserByEmail(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		newUserData := make([]User, len(users))
@@ -131,7 +131,7 @@ func TestUserService_FindUserByEmail(t *testing.T) {
 		for i, user := range users {
 			newUser, err := userService.CreateUser(testHelper.Ctx, user)
 			require.NoError(t, err)
-			newUserData[i] = newUser			
+			newUserData[i] = newUser
 		}
 
 		for _, userData := range newUserData {
@@ -145,7 +145,7 @@ func TestUserService_FindUserByEmail(t *testing.T) {
 			require.Equal(t, userData.CreatedAt, foundUser.CreatedAt)
 			require.Equal(t, userData.UpdatedAt, foundUser.UpdatedAt)
 		}
-		
+
 		return nil
 	})
 }
@@ -155,15 +155,15 @@ func TestUserService_FindUserByEmail_Returns_NotFound_WhenUserDoesNotExist(t *te
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		newUserData := make([]User, len(users))
@@ -171,7 +171,7 @@ func TestUserService_FindUserByEmail_Returns_NotFound_WhenUserDoesNotExist(t *te
 		for i, user := range users {
 			newUser, err := userService.CreateUser(testHelper.Ctx, user)
 			require.NoError(t, err)
-			newUserData[i] = newUser			
+			newUserData[i] = newUser
 		}
 
 		missingEmailInput := FindUserByEmailInput{Email: "missing@email.co.uk"}
@@ -190,15 +190,15 @@ func TestUserService_FindUserByID(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		newUserData := make([]User, len(users))
@@ -206,7 +206,7 @@ func TestUserService_FindUserByID(t *testing.T) {
 		for i, user := range users {
 			newUser, err := userService.CreateUser(testHelper.Ctx, user)
 			require.NoError(t, err)
-			newUserData[i] = newUser			
+			newUserData[i] = newUser
 		}
 
 		for _, userData := range newUserData {
@@ -220,7 +220,7 @@ func TestUserService_FindUserByID(t *testing.T) {
 			require.Equal(t, userData.CreatedAt, foundUser.CreatedAt)
 			require.Equal(t, userData.UpdatedAt, foundUser.UpdatedAt)
 		}
-		
+
 		return nil
 	})
 }
@@ -230,15 +230,15 @@ func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testi
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		newUserData := make([]User, len(users))
@@ -246,7 +246,7 @@ func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testi
 		for i, user := range users {
 			newUser, err := userService.CreateUser(testHelper.Ctx, user)
 			require.NoError(t, err)
-			newUserData[i] = newUser			
+			newUserData[i] = newUser
 		}
 
 		missingUserId := uuid.New()
@@ -256,7 +256,7 @@ func TestUserService_FindUserByID_Returns_NotFound_WhenUserDoesNotExist(t *testi
 		require.Equal(t, "user not found", err.Error())
 		var notFoundErr *service_errors.NotFoundError
 		require.True(t, errors.As(err, &notFoundErr))
-		
+
 		return nil
 	})
 }
@@ -266,28 +266,28 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		newUser, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: "test@example.co.uk",
-			Password: "duckling", 
+			Email:    "test@example.co.uk",
+			Password: "duckling",
 		})
-		
+
 		require.NoError(t, err)
 		require.Equal(t, "test@example.co.uk", newUser.Email)
 		require.Equal(t, false, newUser.IsChirpyRed)
 
 		updatedUserInput := UpdateUserInput{
-			UserID: newUser.ID,
-			Email: "updated@example.co.uk",
-			Password: "a completely new password", 
+			UserID:   newUser.ID,
+			Email:    "updated@example.co.uk",
+			Password: "a completely new password",
 		}
 		updatedUser, err := userService.UpdateUser(testHelper.Ctx, updatedUserInput)
-		
+
 		require.NoError(t, err)
 		require.Equal(t, "updated@example.co.uk", updatedUser.Email)
 		require.Equal(t, false, updatedUser.IsChirpyRed)
 		require.True(t, newUser.CreatedAt.Equal(updatedUser.CreatedAt))
-		
+
 		require.NotEqual(t, newUser.HashedPassword, updatedUser.HashedPassword)
 
 		return nil
@@ -299,15 +299,15 @@ func TestUserService_UpdateUser_Returns_ConflictError_When_EmailAlreadyExists(t 
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		users := []CreateUserInput{
 			{
-				Email: "test@example.co.uk",
-				Password: "duckling", 
+				Email:    "test@example.co.uk",
+				Password: "duckling",
 			},
 			{
-				Email: "test2@example.co.uk",
-				Password: "duckling", 
+				Email:    "test2@example.co.uk",
+				Password: "duckling",
 			},
 		}
 		newUserData := make([]User, len(users))
@@ -315,13 +315,13 @@ func TestUserService_UpdateUser_Returns_ConflictError_When_EmailAlreadyExists(t 
 		for i, user := range users {
 			newUser, err := userService.CreateUser(testHelper.Ctx, user)
 			require.NoError(t, err)
-			newUserData[i] = newUser			
+			newUserData[i] = newUser
 		}
 
 		updatedUserInput := UpdateUserInput{
-			UserID: newUserData[0].ID,
-			Email: newUserData[1].Email,
-			Password: "a completely new password", 
+			UserID:   newUserData[0].ID,
+			Email:    newUserData[1].Email,
+			Password: "a completely new password",
 		}
 		_, err := userService.UpdateUser(testHelper.Ctx, updatedUserInput)
 		require.Error(t, err)
@@ -336,11 +336,11 @@ func TestUserService_UpdateUser_Returns_NotFoundError_When_UserDoesNotExist(t *t
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		updatedUserInput := UpdateUserInput{
-			UserID: uuid.New(),
-			Email: "updated@example.co.uk",
-			Password: "a completely new password", 
+			UserID:   uuid.New(),
+			Email:    "updated@example.co.uk",
+			Password: "a completely new password",
 		}
 		_, err := userService.UpdateUser(testHelper.Ctx, updatedUserInput)
 		require.Error(t, err)
@@ -357,24 +357,24 @@ func TestUserService_UpdateUserIsChirpyRed(t *testing.T) {
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		newUser, err := userService.CreateUser(testHelper.Ctx, CreateUserInput{
-			Email: "test@example.co.uk",
-			Password: "duckling", 
+			Email:    "test@example.co.uk",
+			Password: "duckling",
 		})
-		
+
 		require.NoError(t, err)
 		require.Equal(t, "test@example.co.uk", newUser.Email)
 		require.Equal(t, false, newUser.IsChirpyRed)
 
 		now := time.Now()
 		updatedUserIsChirpyRedInput := UpdateUserIsChirpyRedInput{
-			UserID: newUser.ID,
+			UserID:      newUser.ID,
 			IsChirpyRed: true,
-			UpdatedAt: now,
+			UpdatedAt:   now,
 		}
 		updatedUser, err := userService.UpdateUserIsChirpyRed(testHelper.Ctx, updatedUserIsChirpyRedInput)
-		
+
 		require.NoError(t, err)
 		require.Equal(t, true, updatedUser.IsChirpyRed)
 		require.True(t, now.Equal(updatedUser.UpdatedAt))
@@ -388,14 +388,14 @@ func TestUserService_UpdateUserIsChirpyRed_Returns_NotFoundError_When_UserDoesNo
 
 	testHelper.WithTx(func(queries *database.Queries) error {
 		userService := NewUserService(queries)
-		
+
 		updatedUserIsChirpyRedInput := UpdateUserIsChirpyRedInput{
-			UserID: uuid.New(),
+			UserID:      uuid.New(),
 			IsChirpyRed: true,
-			UpdatedAt: time.Now(),
+			UpdatedAt:   time.Now(),
 		}
 		_, err := userService.UpdateUserIsChirpyRed(testHelper.Ctx, updatedUserIsChirpyRedInput)
-		
+
 		require.Error(t, err)
 		require.Equal(t, "user not found", err.Error())
 		var notFoundErr *service_errors.NotFoundError

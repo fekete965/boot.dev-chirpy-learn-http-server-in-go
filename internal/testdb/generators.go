@@ -18,24 +18,24 @@ type Generator interface {
 }
 
 type generator struct {
-	Db *database.Queries
+	Db    *database.Queries
 	Faker *gofakeit.Faker
-	Seed uint64
-	T *testing.T
+	Seed  uint64
+	T     *testing.T
 }
 
 type NewGeneratorInput struct {
-	Db *database.Queries
+	Db   *database.Queries
 	Seed uint64
-	T *testing.T
+	T    *testing.T
 }
 
 func NewGenerator(input NewGeneratorInput) *generator {
 	return &generator{
-		Db: input.Db,
+		Db:    input.Db,
 		Faker: gofakeit.New(input.Seed),
-		Seed: input.Seed,
-		T: input.T,
+		Seed:  input.Seed,
+		T:     input.T,
 	}
 }
 
@@ -110,4 +110,3 @@ func GenerateMany[T any](t *testing.T, faker *gofakeit.Faker, count int) []T {
 	// Return the generated values
 	return generatedValues
 }
-

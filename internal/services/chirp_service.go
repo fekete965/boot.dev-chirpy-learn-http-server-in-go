@@ -9,17 +9,17 @@ import (
 
 type CreateChirpInput struct {
 	UserID uuid.UUID
-	Body string
+	Body   string
 }
 
 type DeleteChirpInput struct {
-	UserID uuid.UUID
+	UserID  uuid.UUID
 	ChirpID uuid.UUID
 }
 
 type GetAllChirpsInput struct {
 	UserID *uuid.UUID
-	Sort *string
+	Sort   *string
 }
 
 type GetChirpByIDInput struct {
@@ -27,9 +27,9 @@ type GetChirpByIDInput struct {
 }
 
 type Chirp struct {
-	ID uuid.UUID
-	UserID uuid.UUID
-	Body string
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Body      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

@@ -26,12 +26,12 @@ func CheckPasswordHash(password string, hash string) (bool, error) {
 
 func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	now := time.Now()
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer: "chirpy",
-		Subject: userID.String(),
-		ID: uuid.New().String(),
-		IssuedAt: jwt.NewNumericDate(now),
+		Issuer:    "chirpy",
+		Subject:   userID.String(),
+		ID:        uuid.New().String(),
+		IssuedAt:  jwt.NewNumericDate(now),
 		ExpiresAt: jwt.NewNumericDate(now.Add(expiresIn)),
 	})
 
@@ -68,7 +68,7 @@ func GetBearerToken(r *http.Request) (string, error) {
 	if token == "" {
 		return "", fmt.Errorf("no authorization header provided")
 	}
-	
+
 	if !strings.HasPrefix(token, constants.BEARER_TOKEN_PREFIX) {
 		return "", fmt.Errorf("invalid authorization header format")
 	}
@@ -87,7 +87,6 @@ func MakeRefreshToken() (string, error) {
 	refreshToken := hex.EncodeToString(randomBytes)
 	return refreshToken, nil
 }
-
 
 func GetAPIKey(r *http.Request) (string, error) {
 	token := r.Header.Get(constants.AUTHORIZATION_HEADER)

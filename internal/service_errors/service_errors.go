@@ -4,10 +4,9 @@ import (
 	"fmt"
 )
 
-
 type ServiceError struct {
-	Code int
-	Err error
+	Code    int
+	Err     error
 	Message string
 }
 
@@ -29,10 +28,10 @@ type NotFoundError struct {
 
 func NewNotFoundError(message string) *NotFoundError {
 	return &NotFoundError{
-			ServiceError: ServiceError{
-					Code:    404,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    404,
+			Message: message,
+		},
 	}
 }
 
@@ -42,10 +41,10 @@ type ConflictError struct {
 
 func NewConflictError(message string) *ConflictError {
 	return &ConflictError{
-			ServiceError: ServiceError{
-					Code:    409,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    409,
+			Message: message,
+		},
 	}
 }
 
@@ -55,10 +54,10 @@ type BadRequestError struct {
 
 func NewBadRequestError(message string) *BadRequestError {
 	return &BadRequestError{
-			ServiceError: ServiceError{
-					Code:    400,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    400,
+			Message: message,
+		},
 	}
 }
 
@@ -68,10 +67,10 @@ type UnauthorizedError struct {
 
 func NewUnauthorizedError(message string) *UnauthorizedError {
 	return &UnauthorizedError{
-			ServiceError: ServiceError{
-					Code:    401,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    401,
+			Message: message,
+		},
 	}
 }
 
@@ -81,10 +80,10 @@ type ForbiddenError struct {
 
 func NewForbiddenError(message string) *ForbiddenError {
 	return &ForbiddenError{
-			ServiceError: ServiceError{
-					Code:    403,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    403,
+			Message: message,
+		},
 	}
 }
 
@@ -94,9 +93,9 @@ type InternalServerError struct {
 
 func NewInternalServerError(message string) *InternalServerError {
 	return &InternalServerError{
-			ServiceError: ServiceError{
-					Code:    500,
-					Message: message,
-			},
+		ServiceError: ServiceError{
+			Code:    500,
+			Message: message,
+		},
 	}
 }
