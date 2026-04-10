@@ -57,6 +57,7 @@ func TestServiceErrorToApiResponseWithDecodeErrorWithTheCorrectFields(t *testing
 
 func TestServiceErrorToApiResponseWithServiceError(t *testing.T) {
 	type testCases struct {
+		Name                 string
 		ServiceError         error
 		ExpectedStatusCode   int
 		ExpectedErrorMessage string
@@ -65,36 +66,42 @@ func TestServiceErrorToApiResponseWithServiceError(t *testing.T) {
 
 	tests := []testCases{
 		{
+			Name:                 "found error case",
 			ServiceError:         service_errors.NewNotFoundError("user cannot be found"),
 			ExpectedStatusCode:   http.StatusNotFound,
 			ExpectedErrorMessage: "user cannot be found",
 			ExpectedErrorCode:    "NOT_FOUND",
 		},
 		{
+			Name:                 "conflict error case",
 			ServiceError:         service_errors.NewConflictError("conflict error"),
 			ExpectedStatusCode:   http.StatusConflict,
 			ExpectedErrorMessage: "conflict error",
 			ExpectedErrorCode:    "CONFLICT",
 		},
 		{
+			Name:                 "bad request case",
 			ServiceError:         service_errors.NewBadRequestError("bad request error"),
 			ExpectedStatusCode:   http.StatusBadRequest,
 			ExpectedErrorMessage: "bad request error",
 			ExpectedErrorCode:    "BAD_REQUEST",
 		},
 		{
+			Name:                 "unauthorized error case",
 			ServiceError:         service_errors.NewUnauthorizedError("unauthorized error"),
 			ExpectedStatusCode:   http.StatusUnauthorized,
 			ExpectedErrorMessage: "unauthorized error",
 			ExpectedErrorCode:    "UNAUTHORIZED",
 		},
 		{
+			Name:                 "forbidden error case",
 			ServiceError:         service_errors.NewForbiddenError("forbidden error"),
 			ExpectedStatusCode:   http.StatusForbidden,
 			ExpectedErrorMessage: "forbidden error",
 			ExpectedErrorCode:    "FORBIDDEN",
 		},
 		{
+			Name:                 "internal server error case",
 			ServiceError:         service_errors.NewInternalServerError("internal server error"),
 			ExpectedStatusCode:   http.StatusInternalServerError,
 			ExpectedErrorMessage: "internal server error",
@@ -103,10 +110,12 @@ func TestServiceErrorToApiResponseWithServiceError(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		statusCode, apiErrorResponse := ServiceErrorToApiResponse(test.ServiceError)
+		t.Run(test.Name, func(t *testing.T) {
+			statusCode, apiErrorResponse := ServiceErrorToApiResponse(test.ServiceError)
 
-		require.Equal(t, test.ExpectedStatusCode, statusCode)
-		require.Equal(t, test.ExpectedErrorMessage, apiErrorResponse.Error.Message)
-		require.Equal(t, test.ExpectedErrorCode, apiErrorResponse.Error.Code)
+			require.Equal(t, test.ExpectedStatusCode, statusCode)
+			require.Equal(t, test.ExpectedErrorMessage, apiErrorResponse.Error.Message)
+			require.Equal(t, test.ExpectedErrorCode, apiErrorResponse.Error.Code)
+		})
 	}
 }

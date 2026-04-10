@@ -116,6 +116,7 @@ func TestHandleCreateChirp_Profanity_Filtering(t *testing.T) {
 		user, loginOutput := createAndLoginUser(t, testHelper.Ctx, routeHandlers)
 
 		type profanityTestCase struct {
+			name              string
 			chirpBody         string
 			expectedChirpBody string
 		}
@@ -123,41 +124,45 @@ func TestHandleCreateChirp_Profanity_Filtering(t *testing.T) {
 		profanityTestCases := make([]profanityTestCase, len(constants.PROFANE_WORDS))
 		for i, word := range constants.PROFANE_WORDS {
 			profanityTestCases[i] = profanityTestCase{
+				name:              fmt.Sprintf("%s is mid sentence", word),
 				chirpBody:         fmt.Sprintf("This is a %s great day!", word),
 				expectedChirpBody: "This is a **** great day!",
 			}
 			profanityTestCases[i] = profanityTestCase{
+				name:              fmt.Sprintf("%s is before exclamation mark", word),
 				chirpBody:         fmt.Sprintf("This is a %s!", word),
 				expectedChirpBody: fmt.Sprintf("This is a %s!", word),
 			}
 		}
 
 		for _, testCase := range profanityTestCases {
-			payload, err := json.Marshal(models.CreateChirpResource{
-				Body: testCase.chirpBody,
+			t.Run(testCase.name, func(t *testing.T) {
+				payload, err := json.Marshal(models.CreateChirpResource{
+					Body: testCase.chirpBody,
+				})
+				require.NoError(t, err)
+
+				// Setup the request
+				recorder := httptest.NewRecorder()
+				req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
+
+				// Handle request
+				router.ServeHTTP(recorder, req)
+
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+
+				var responseBody models.CreateChirpResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &responseBody)
+				require.NoError(t, err)
+
+				require.Equal(t, user.ID, responseBody.UserID)
+				require.Equal(t, testCase.expectedChirpBody, responseBody.Body)
+				require.False(t, responseBody.CreatedAt.IsZero())
+				require.False(t, responseBody.UpdatedAt.IsZero())
 			})
-			require.NoError(t, err)
-
-			// Setup the request
-			recorder := httptest.NewRecorder()
-			req := httptest.NewRequest("POST", "/api/chirps", bytes.NewReader(payload))
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer "+loginOutput.Token)
-
-			// Handle request
-			router.ServeHTTP(recorder, req)
-
-			require.Equal(t, http.StatusCreated, recorder.Code)
-			require.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
-
-			var responseBody models.CreateChirpResponse
-			err = json.Unmarshal(recorder.Body.Bytes(), &responseBody)
-			require.NoError(t, err)
-
-			require.Equal(t, user.ID, responseBody.UserID)
-			require.Equal(t, testCase.expectedChirpBody, responseBody.Body)
-			require.False(t, responseBody.CreatedAt.IsZero())
-			require.False(t, responseBody.UpdatedAt.IsZero())
 		}
 
 		return nil

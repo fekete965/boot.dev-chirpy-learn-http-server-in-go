@@ -60,24 +60,22 @@ func TestChirpService_CreateChirp_CleansProfanity(t *testing.T) {
 	testCfg := testutils.GetTestApiConfig()
 
 	type testCase struct {
+		name     string
 		input    string
 		expected string
 	}
 	testCases := make([]testCase, 0)
 	for _, word := range constants.PROFANE_WORDS {
-		input1 := fmt.Sprintf("Testing the word %s", word)
-		expected1 := fmt.Sprintf("Testing the word %s", strings.Repeat("*", 4))
-
 		testCases = append(testCases, testCase{
-			input:    input1,
-			expected: expected1,
+			name:     fmt.Sprintf("%s is mid sentence", word),
+			input:    fmt.Sprintf("Testing the word %s", word),
+			expected: "Testing the word ****",
 		})
 
-		input2 := fmt.Sprintf("Testing the word %s!", word)
-		expected2 := fmt.Sprintf("Testing the word %s!", word)
 		testCases = append(testCases, testCase{
-			input:    input2,
-			expected: expected2,
+			name:     fmt.Sprintf("%s is before exclamation mark", word),
+			input:    fmt.Sprintf("Testing the word %s!", word),
+			expected: fmt.Sprintf("Testing the word %s!", word),
 		})
 	}
 
